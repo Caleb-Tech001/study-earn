@@ -60,7 +60,7 @@ const Welcome = () => {
           <div className="space-y-3">
             <Link to="/choose-role" className="block">
               <Button 
-                className="w-full gradient-primary shadow-primary text-lg" 
+                className="w-full gradient-primary shadow-primary" 
                 size="lg"
               >
                 Get Started
@@ -70,7 +70,7 @@ const Welcome = () => {
             <Link to="/login" className="block">
               <Button 
                 variant="outline" 
-                className="w-full text-lg" 
+                className="w-full" 
                 size="lg"
               >
                 Already have an account? Sign In
