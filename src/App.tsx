@@ -27,6 +27,7 @@ import PhoneSignup from "./pages/auth/PhoneSignup";
 import PhoneLogin from "./pages/auth/PhoneLogin";
 import VerifyPhone from "./pages/auth/VerifyPhone";
 import TrustedDevices from "./pages/auth/TrustedDevices";
+import AuthCallback from "./pages/auth/AuthCallback";
 
 // Learner Pages
 import LearnerDashboard from "./pages/learner/LearnerDashboard";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route 
               path="/security-settings" 
               element={
