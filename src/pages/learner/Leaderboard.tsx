@@ -5,27 +5,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy, Medal, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { generateLeaderboardData } from '@/utils/leaderboardData';
+import { useMemo } from 'react';
 
 const Leaderboard = () => {
   const { user } = useAuth();
   const userName = user?.user_metadata?.full_name || 'Caleb Oladepo';
   const userAvatar = user?.user_metadata?.avatar_url || '';
 
-  const globalLeaderboard = [
-    { rank: 1, name: userName, points: 1850, streak: 14, avatar: userAvatar, change: 2, isCurrentUser: true },
-    { rank: 2, name: 'Sarah Williams', points: 1180, streak: 21, avatar: '', change: -1 },
-    { rank: 3, name: 'Alex Johnson', points: 1050, streak: 9, avatar: '', change: 1 },
-    { rank: 4, name: 'Michael Chen', points: 890, streak: 7, avatar: '', change: -1 },
-    { rank: 5, name: 'Emma Davis', points: 850, streak: 7, avatar: '', change: 0 },
-    { rank: 6, name: 'David Brown', points: 820, streak: 15, avatar: '', change: 1 },
-    { rank: 7, name: 'Lisa Anderson', points: 780, streak: 12, avatar: '', change: -2 },
-  ];
+  const globalLeaderboard = useMemo(
+    () => generateLeaderboardData(userName, userAvatar, 100, false),
+    [userName, userAvatar]
+  );
 
-  const weeklyLeaderboard = [
-    { rank: 1, name: userName, points: 450, streak: 7, avatar: userAvatar, change: 3, isCurrentUser: true },
-    { rank: 2, name: 'Sarah Williams', points: 240, streak: 21, avatar: '', change: -1 },
-    { rank: 3, name: 'Alex Johnson', points: 220, streak: 14, avatar: '', change: 0 },
-  ];
+  const weeklyLeaderboard = useMemo(
+    () => generateLeaderboardData(userName, userAvatar, 100, true),
+    [userName, userAvatar]
+  );
 
   const getRankBadge = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />;
