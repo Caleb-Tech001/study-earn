@@ -10,11 +10,12 @@ const Index = () => {
 
   // Redirect authenticated users to their dashboard
   if (user) {
-    return <Navigate to={`/${user.role}/dashboard`} replace />;
+    const userRole = user.user_metadata?.role || 'learner';
+    return <Navigate to={`/${userRole}/dashboard`} replace />;
   }
 
-  // Redirect unauthenticated users to landing page
-  return <Navigate to="/landing" replace />;
+  // Redirect unauthenticated users to welcome page
+  return <Navigate to="/welcome" replace />;
 };
 
 export default Index;

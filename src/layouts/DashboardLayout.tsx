@@ -38,19 +38,23 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  // Get user role from metadata
+  const userRole = user?.user_metadata?.role || 'learner';
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   const getNavLinks = () => {
     if (!user) return [];
 
     const baseLinks = [
-      { icon: Activity, label: 'Activity', path: `/${user.role}/activity` },
-      { icon: User, label: 'Profile', path: `/${user.role}/profile` },
-      { icon: Settings, label: 'Settings', path: `/${user.role}/settings` },
+      { icon: Activity, label: 'Activity', path: `/${userRole}/activity` },
+      { icon: User, label: 'Profile', path: `/${userRole}/profile` },
+      { icon: Settings, label: 'Settings', path: `/${userRole}/settings` },
     ];
 
-    switch (user.role) {
+    switch (userRole) {
       case 'learner':
         return [
           { icon: LayoutDashboard, label: 'Dashboard', path: '/learner/dashboard' },
@@ -89,9 +93,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/welcome');
   };
 
   const navLinks = getNavLinks();
@@ -154,27 +158,27 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-10 gap-2 px-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} />
+                      <AvatarImage src={user?.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user?.name?.charAt(0).toUpperCase()}
+                        {userName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden font-medium md:inline-block">{user?.name}</span>
+                    <span className="hidden font-medium md:inline-block">{userName}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-sm font-medium">{userName}</p>
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate(`/${user?.role}/profile`)}>
+                  <DropdownMenuItem onClick={() => navigate(`/${userRole}/profile`)}>
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(`/${user?.role}/settings`)}>
+                  <DropdownMenuItem onClick={() => navigate(`/${userRole}/settings`)}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </DropdownMenuItem>

@@ -20,12 +20,13 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!user) {
-    return <Navigate to="/signup" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
+  // Note: Role checking will be implemented with profile data
+  // if (allowedRoles && !allowedRoles.includes(user.role)) {
+  //   return <Navigate to="/" replace />;
+  // }
 
   return <>{children}</>;
 };

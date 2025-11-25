@@ -15,6 +15,15 @@ import Help from "./pages/Help";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 
+// Auth Pages
+import Welcome from "./pages/auth/Welcome";
+import ChooseRole from "./pages/auth/ChooseRole";
+import Login from "./pages/auth/Login";
+import ProfileSetup from "./pages/auth/ProfileSetup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import SecuritySettings from "./pages/auth/SecuritySettings";
+
 // Learner Pages
 import LearnerDashboard from "./pages/learner/LearnerDashboard";
 import Modules from "./pages/learner/Modules";
@@ -43,9 +52,25 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/landing" element={<Landing />} />
             <Route path="/about" element={<About />} />
-            <Route path="/signup" element={<Signup />} />
             <Route path="/help" element={<Help />} />
             <Route path="/legal" element={<Legal />} />
+            
+            {/* Auth Routes */}
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/choose-role" element={<ChooseRole />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile-setup" element={<ProfileSetup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route 
+              path="/security-settings" 
+              element={
+                <ProtectedRoute>
+                  <SecuritySettings />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Learner Routes */}
             <Route
