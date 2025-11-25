@@ -2,6 +2,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import {
   Wallet as WalletIcon,
   TrendingUp,
@@ -14,10 +15,25 @@ import {
 } from 'lucide-react';
 
 const Wallet = () => {
+  const { toast } = useToast();
   const balance = 245.5;
   const totalEarned = 1250.0;
   const totalWithdrawn = 800.0;
   const totalRedeemed = 204.5;
+
+  const handleWithdraw = () => {
+    toast({
+      title: "Withdrawal Initiated",
+      description: "Your withdrawal request is being processed. Funds will be transferred within 2-3 business days.",
+    });
+  };
+
+  const handleRedeem = () => {
+    toast({
+      title: "Redeem Rewards",
+      description: "Browse available rewards in the Marketplace to redeem your balance.",
+    });
+  };
 
   const transactions = [
     {
@@ -114,11 +130,17 @@ const Wallet = () => {
           </div>
 
           <div className="flex gap-4">
-            <Button className="flex-1 bg-white text-primary hover:bg-white/90">
+            <Button 
+              onClick={handleWithdraw}
+              className="flex-1 bg-white text-primary hover:bg-white/90"
+            >
               <Download className="mr-2 h-4 w-4" />
               Withdraw
             </Button>
-            <Button variant="outline" className="flex-1 border-white text-white hover:bg-white/10">
+            <Button 
+              onClick={handleRedeem}
+              className="flex-1 bg-white/20 text-white border border-white/30 hover:bg-white/30"
+            >
               <ShoppingBag className="mr-2 h-4 w-4" />
               Redeem
             </Button>

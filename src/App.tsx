@@ -33,6 +33,12 @@ import AuthCallback from "./pages/auth/AuthCallback";
 import LearnerDashboard from "./pages/learner/LearnerDashboard";
 import Modules from "./pages/learner/Modules";
 import Wallet from "./pages/learner/Wallet";
+import Marketplace from "./pages/learner/Marketplace";
+import Leaderboard from "./pages/learner/Leaderboard";
+import Community from "./pages/learner/Community";
+import Activity from "./pages/learner/Activity";
+import Profile from "./pages/learner/Profile";
+import Settings from "./pages/learner/Settings";
 
 // Instructor Pages
 import InstructorDashboard from "./pages/instructor/InstructorDashboard";
@@ -112,6 +118,54 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['learner']}>
                   <Wallet />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learner/marketplace"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Marketplace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learner/leaderboard"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Leaderboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learner/community"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Community />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learner/activity"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Activity />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learner/profile"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learner/settings"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
