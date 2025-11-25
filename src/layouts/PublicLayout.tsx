@@ -90,7 +90,7 @@ export const PublicLayout = ({ children, showNav = true }: PublicLayoutProps) =>
             </div>
 
             <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-              © 2024 StudyEarn. All rights reserved.
+              © 2025 StudyEarn. All rights reserved.
             </div>
           </div>
         </footer>
