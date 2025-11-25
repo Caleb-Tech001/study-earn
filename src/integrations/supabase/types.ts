@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_recovery: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          recovery_type: string
+          recovery_value: string
+          updated_at: string | null
+          user_id: string
+          verified: boolean | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          recovery_type: string
+          recovery_value: string
+          updated_at?: string | null
+          user_id: string
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          recovery_type?: string
+          recovery_value?: string
+          updated_at?: string | null
+          user_id?: string
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      login_history: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          location: string | null
+          login_method: string
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          login_method: string
+          success: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          login_method?: string
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      phone_verification_codes: {
+        Row: {
+          attempts: number | null
+          code: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          phone_number: string
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          attempts?: number | null
+          code: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          phone_number: string
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          attempts?: number | null
+          code?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age_range: string | null
@@ -30,6 +138,12 @@ export type Database = {
           is_kyc_verified: boolean | null
           learning_interests: string[] | null
           phone: string | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          phone_verified_at: string | null
+          preferred_auth_method: string | null
+          secondary_email: string | null
+          secondary_phone: string | null
           updated_at: string | null
           years_of_experience: number | null
         }
@@ -48,6 +162,12 @@ export type Database = {
           is_kyc_verified?: boolean | null
           learning_interests?: string[] | null
           phone?: string | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          preferred_auth_method?: string | null
+          secondary_email?: string | null
+          secondary_phone?: string | null
           updated_at?: string | null
           years_of_experience?: number | null
         }
@@ -66,8 +186,59 @@ export type Database = {
           is_kyc_verified?: boolean | null
           learning_interests?: string[] | null
           phone?: string | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          preferred_auth_method?: string | null
+          secondary_email?: string | null
+          secondary_phone?: string | null
           updated_at?: string | null
           years_of_experience?: number | null
+        }
+        Relationships: []
+      }
+      trusted_devices: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string
+          device_name: string | null
+          device_type: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          last_used_at: string | null
+          trusted_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint: string
+          device_name?: string | null
+          device_type?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          trusted_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string
+          device_name?: string | null
+          device_type?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          trusted_at?: string | null
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -97,6 +268,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_codes: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

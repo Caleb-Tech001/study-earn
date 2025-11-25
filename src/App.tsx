@@ -23,6 +23,10 @@ import ProfileSetup from "./pages/auth/ProfileSetup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SecuritySettings from "./pages/auth/SecuritySettings";
+import PhoneSignup from "./pages/auth/PhoneSignup";
+import PhoneLogin from "./pages/auth/PhoneLogin";
+import VerifyPhone from "./pages/auth/VerifyPhone";
+import TrustedDevices from "./pages/auth/TrustedDevices";
 
 // Learner Pages
 import LearnerDashboard from "./pages/learner/LearnerDashboard";
@@ -59,7 +63,11 @@ const App = () => (
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/choose-role" element={<ChooseRole />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/phone-signup" element={<PhoneSignup />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/phone-login" element={<PhoneLogin />} />
+            <Route path="/verify-phone" element={<VerifyPhone />} />
+            <Route path="/verify-phone-login" element={<VerifyPhone />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -68,6 +76,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SecuritySettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/trusted-devices" 
+              element={
+                <ProtectedRoute>
+                  <TrustedDevices />
                 </ProtectedRoute>
               } 
             />
