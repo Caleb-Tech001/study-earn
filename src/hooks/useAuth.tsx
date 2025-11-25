@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   signUp: (email: string, password: string, role: string, metadata?: any) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithProvider: (provider: 'google' | 'apple', role?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<{ error: any }>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
@@ -67,6 +68,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
+    });
+    
+    return { error };
+  };
+
+  const signInWithProvider = async (provider: 'google' | 'apple', role?: string) => {
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: redirectUrl,
+        queryParams: role ? {
+          role: role
+        } : undefined
+      }
     });
     
     return { error };
@@ -138,6 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       signUp,
       signIn,
+      signInWithProvider,
       signOut,
       sendPasswordResetEmail,
       updatePassword,
