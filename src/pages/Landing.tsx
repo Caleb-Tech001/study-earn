@@ -91,8 +91,8 @@ const Landing = () => {
               Join 50,000+ active learners
             </div>
             <h1 className="mb-6 font-display text-5xl font-bold leading-tight md:text-7xl">
-              Learn <span className="gradient-hero bg-clip-text text-transparent">Smarter</span>,
-              Earn <span className="gradient-hero bg-clip-text text-transparent">Real</span> Rewards
+              Learn <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Smarter</span>,
+              Earn <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Real</span> Rewards
             </h1>
             <p className="mb-8 text-xl text-muted-foreground md:text-2xl">
               The first learning platform that pays you for verified progress. No tricks, just real
