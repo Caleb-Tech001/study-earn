@@ -9,13 +9,62 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Trophy, Calendar, Mail, Phone } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
   
   const userName = user?.user_metadata?.full_name || 'User';
   const userEmail = user?.email || '';
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user?.id}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(publicUrl);
+      
+      toast({
+        title: "Profile Picture Updated",
+        description: "Your profile picture has been successfully updated.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSaveProfile = () => {
     toast({
@@ -47,15 +96,25 @@ const Profile = () => {
             <div className="mb-6 flex items-center gap-6">
               <div className="relative">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarImage src={avatarUrl} />
                   <AvatarFallback className="bg-primary text-3xl text-primary-foreground">
                     {userName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
+                <input
+                  type="file"
+                  id="avatar-upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={uploading}
+                />
                 <Button
                   size="icon"
                   variant="secondary"
                   className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
+                  disabled={uploading}
                 >
                   <Camera className="h-4 w-4" />
                 </Button>
