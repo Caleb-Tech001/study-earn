@@ -12,7 +12,10 @@ import {
   ArrowDownRight,
   Gift,
   Trophy,
+  FileDown,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Wallet = () => {
   const { toast } = useToast();
@@ -42,49 +45,160 @@ const Wallet = () => {
       description: 'Completed Python Basics Quiz',
       amount: 15.0,
       status: 'completed',
-      date: '2024-01-15T10:30:00',
+      date: '2025-01-15T10:30:00',
     },
     {
       id: '2',
+      type: 'earn',
+      description: 'Completed JavaScript Advanced Module',
+      amount: 35.0,
+      status: 'completed',
+      date: '2024-12-28T14:20:00',
+    },
+    {
+      id: '3',
       type: 'redeem',
       description: 'Amazon Gift Card - $50',
       amount: -50.0,
       status: 'completed',
-      date: '2024-01-14T15:20:00',
+      date: '2024-12-20T15:20:00',
     },
     {
-      id: '3',
+      id: '4',
       type: 'earn',
       description: '7-Day Streak Bonus',
       amount: 25.0,
       status: 'completed',
-      date: '2024-01-14T00:00:00',
+      date: '2024-12-14T00:00:00',
     },
     {
-      id: '4',
+      id: '5',
       type: 'withdraw',
       description: 'Bank Transfer',
       amount: -100.0,
       status: 'pending',
-      date: '2024-01-13T14:15:00',
+      date: '2024-11-25T14:15:00',
     },
     {
-      id: '5',
+      id: '6',
       type: 'earn',
       description: 'Completed Web Dev Module 3',
       amount: 40.0,
       status: 'completed',
-      date: '2024-01-12T18:45:00',
+      date: '2024-11-18T18:45:00',
     },
     {
-      id: '6',
+      id: '7',
       type: 'referral',
       description: 'Referral Bonus - Sarah J.',
       amount: 20.0,
       status: 'completed',
-      date: '2024-01-11T09:30:00',
+      date: '2024-10-30T09:30:00',
+    },
+    {
+      id: '8',
+      type: 'earn',
+      description: 'Completed React Fundamentals',
+      amount: 45.0,
+      status: 'completed',
+      date: '2024-10-15T16:00:00',
+    },
+    {
+      id: '9',
+      type: 'redeem',
+      description: 'Course Discount Voucher',
+      amount: -25.0,
+      status: 'completed',
+      date: '2024-09-28T11:45:00',
+    },
+    {
+      id: '10',
+      type: 'earn',
+      description: 'Monthly Achievement Bonus',
+      amount: 50.0,
+      status: 'completed',
+      date: '2024-09-01T00:00:00',
+    },
+    {
+      id: '11',
+      type: 'withdraw',
+      description: 'PayPal Transfer',
+      amount: -150.0,
+      status: 'completed',
+      date: '2024-08-22T10:30:00',
+    },
+    {
+      id: '12',
+      type: 'earn',
+      description: 'Completed TypeScript Course',
+      amount: 55.0,
+      status: 'completed',
+      date: '2024-08-10T13:20:00',
+    },
+    {
+      id: '13',
+      type: 'referral',
+      description: 'Referral Bonus - Mike R.',
+      amount: 20.0,
+      status: 'completed',
+      date: '2024-07-25T08:15:00',
+    },
+    {
+      id: '14',
+      type: 'earn',
+      description: 'Completed Node.js Backend Course',
+      amount: 60.0,
+      status: 'completed',
+      date: '2024-07-05T17:30:00',
+    },
+    {
+      id: '15',
+      type: 'redeem',
+      description: 'Premium Course Access',
+      amount: -80.0,
+      status: 'completed',
+      date: '2024-06-18T14:00:00',
     },
   ];
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text('Transaction History', 14, 20);
+    
+    // Account info
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
+    doc.text(`Balance: $${balance.toFixed(2)}`, 14, 36);
+    
+    // Table
+    autoTable(doc, {
+      startY: 45,
+      head: [['Date', 'Description', 'Type', 'Amount', 'Status']],
+      body: transactions.map(t => [
+        new Date(t.date).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        }),
+        t.description,
+        t.type.charAt(0).toUpperCase() + t.type.slice(1),
+        `$${Math.abs(t.amount).toFixed(2)}`,
+        t.status.charAt(0).toUpperCase() + t.status.slice(1)
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [99, 102, 241] },
+    });
+    
+    doc.save('transaction-history.pdf');
+    
+    toast({
+      title: "PDF Downloaded",
+      description: "Your transaction history has been exported successfully.",
+    });
+  };
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -104,6 +218,7 @@ const Wallet = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -187,8 +302,9 @@ const Wallet = () => {
         <Card className="border-2 p-6">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="font-display text-2xl font-bold">Transaction History</h2>
-            <Button variant="outline" size="sm">
-              Export
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Export PDF
             </Button>
           </div>
 
