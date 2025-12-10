@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useCart, CartItem } from '@/contexts/CartContext';
+import { UploadProductModal } from '@/components/marketplace/UploadProductModal';
 import {
   ShoppingBag,
   Gift,
@@ -21,16 +23,20 @@ import {
   Plus,
   Star,
   Upload,
+  ShoppingCart,
 } from 'lucide-react';
 
 const Marketplace = () => {
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const walletBalance = 245.5;
   const [activeTab, setActiveTab] = useState('rewards');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [userListedProducts, setUserListedProducts] = useState<any[]>([]);
 
   const rewards = [
     {
-      id: '1',
+      id: 'r1',
       title: 'Amazon Gift Card',
       description: '$25 Amazon gift card',
       cost: 25,
@@ -38,7 +44,7 @@ const Marketplace = () => {
       category: 'Gift Cards',
     },
     {
-      id: '2',
+      id: 'r2',
       title: 'Starbucks Gift Card',
       description: '$10 Starbucks card',
       cost: 10,
@@ -46,7 +52,7 @@ const Marketplace = () => {
       category: 'Food & Beverage',
     },
     {
-      id: '3',
+      id: 'r3',
       title: 'Premium Course Access',
       description: '1 month premium courses',
       cost: 50,
@@ -54,7 +60,7 @@ const Marketplace = () => {
       category: 'Education',
     },
     {
-      id: '4',
+      id: 'r4',
       title: 'Movie Tickets',
       description: '2 movie tickets',
       cost: 20,
@@ -62,7 +68,7 @@ const Marketplace = () => {
       category: 'Entertainment',
     },
     {
-      id: '5',
+      id: 'r5',
       title: 'App Store Gift Card',
       description: '$15 App Store credit',
       cost: 15,
@@ -179,42 +185,46 @@ const Marketplace = () => {
     },
   ];
 
-  const handleRedeem = (item: typeof rewards[0] | typeof digitalProducts[0]) => {
+  const handleAddToCart = (item: any, type: 'reward' | 'digital' | 'community') => {
+    const cartItem: CartItem = {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      cost: item.cost,
+      category: item.category,
+      seller: item.seller,
+      type,
+    };
+    addToCart(cartItem);
+  };
+
+  const handleBuyNow = (item: any) => {
     if (walletBalance >= item.cost) {
       toast({
-        title: "Purchase Successful! 🎉",
-        description: `You've redeemed ${item.title} for $${item.cost}`,
+        title: 'Purchase Successful! 🎉',
+        description: `You've purchased "${item.title}" for $${item.cost}`,
       });
     } else {
       toast({
-        title: "Insufficient Balance",
+        title: 'Insufficient Balance',
         description: `You need $${(item.cost - walletBalance).toFixed(2)} more to purchase this item.`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
 
-  const handleBuyProduct = (product: typeof userProducts[0]) => {
-    if (walletBalance >= product.cost) {
-      toast({
-        title: "Purchase Successful! 🎉",
-        description: `You've purchased "${product.title}" from ${product.seller}. Check your downloads!`,
-      });
-    } else {
-      toast({
-        title: "Insufficient Balance",
-        description: `You need $${(product.cost - walletBalance).toFixed(2)} more to purchase this item.`,
-        variant: "destructive",
-      });
-    }
+  const handleProductAdded = (product: any) => {
+    setUserListedProducts(prev => [...prev, {
+      ...product,
+      id: `user-${Date.now()}`,
+      icon: FileText,
+      seller: 'You',
+      rating: 0,
+      sales: 0,
+    }]);
   };
 
-  const handleSellItem = () => {
-    toast({
-      title: "Upload Your Product",
-      description: "Complete the form to list your digital product. StudyEarn takes a 10% commission on each sale.",
-    });
-  };
+  const allUserProducts = [...userListedProducts, ...userProducts];
 
   return (
     <DashboardLayout>
@@ -239,7 +249,7 @@ const Marketplace = () => {
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search products..." className="pl-10" />
             </div>
-            <Button onClick={handleSellItem}>
+            <Button onClick={() => setShowUploadModal(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Sell Product
             </Button>
@@ -271,13 +281,22 @@ const Marketplace = () => {
                     <span className="font-display text-2xl font-bold text-primary">
                       ${reward.cost}
                     </span>
-                    <Button 
-                      onClick={() => handleRedeem(reward)}
-                      disabled={walletBalance < reward.cost}
-                    >
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      Redeem
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleAddToCart(reward, 'reward')}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        onClick={() => handleBuyNow(reward)}
+                        disabled={walletBalance < reward.cost}
+                      >
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        Redeem
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -301,13 +320,22 @@ const Marketplace = () => {
                     <span className="font-display text-xl font-bold text-primary">
                       ${product.cost}
                     </span>
-                    <Button 
-                      size="sm"
-                      onClick={() => handleRedeem(product)}
-                      disabled={walletBalance < product.cost}
-                    >
-                      Buy
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleAddToCart(product, 'digital')}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleBuyNow(product)}
+                        disabled={walletBalance < product.cost}
+                      >
+                        Buy
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -326,16 +354,42 @@ const Marketplace = () => {
                 <p className="mb-4 text-sm text-muted-foreground">
                   StudyEarn takes a 10% commission on each sale
                 </p>
-                <Button onClick={handleSellItem}>
+                <Button onClick={() => setShowUploadModal(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Start Selling
                 </Button>
               </Card>
             </div>
 
+            {userListedProducts.length > 0 && (
+              <div className="mb-6">
+                <h3 className="mb-4 font-display text-xl font-bold">Your Listed Products</h3>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {userListedProducts.map((product) => (
+                    <Card key={product.id} className="border-2 border-primary/30 bg-primary/5 p-6">
+                      <div className="mb-4 flex items-start justify-between">
+                        <div className="rounded-xl bg-primary/10 p-3">
+                          <FileText className="h-6 w-6 text-primary" />
+                        </div>
+                        <Badge variant="outline">{product.category}</Badge>
+                      </div>
+                      <h3 className="mb-2 font-display text-lg font-bold">{product.title}</h3>
+                      <p className="mb-3 text-sm text-muted-foreground">{product.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-display text-xl font-bold text-primary">
+                          ${product.cost}
+                        </span>
+                        <Badge className="bg-success text-success-foreground">Listed</Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <h3 className="mb-4 font-display text-xl font-bold">Popular Products</h3>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {userProducts.map((product) => (
+              {allUserProducts.filter(p => p.seller !== 'You').map((product) => (
                 <Card key={product.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
                   <div className="mb-4 flex items-start justify-between">
                     <div className="rounded-xl bg-secondary/10 p-3">
@@ -359,13 +413,22 @@ const Marketplace = () => {
                     <span className="font-display text-xl font-bold text-primary">
                       ${product.cost}
                     </span>
-                    <Button 
-                      onClick={() => handleBuyProduct(product)}
-                      disabled={walletBalance < product.cost}
-                    >
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      Buy
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleAddToCart(product, 'community')}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        onClick={() => handleBuyNow(product)}
+                        disabled={walletBalance < product.cost}
+                      >
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        Buy
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -373,6 +436,12 @@ const Marketplace = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <UploadProductModal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onProductAdded={handleProductAdded}
+      />
     </DashboardLayout>
   );
 };

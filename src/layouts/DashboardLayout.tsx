@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { CartDropdown } from '@/components/CartDropdown';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -132,6 +133,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
             <div className="flex items-center gap-2">
               <NotificationDropdown />
+              <CartDropdown />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Lock, Eye, EyeOff, Shield, Trash2 } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, Trash2, Smartphone, CheckCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 
 const SecuritySettings = () => {
   const { user, updatePassword, signOut } = useAuth();
@@ -30,6 +31,8 @@ const SecuritySettings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +90,18 @@ const SecuritySettings = () => {
     toast({
       title: 'Account Deletion',
       description: 'Account deletion feature will be available soon. Please contact support.',
+    });
+  };
+
+  const handle2FAEnabled = () => {
+    setIs2FAEnabled(true);
+  };
+
+  const handleDisable2FA = () => {
+    setIs2FAEnabled(false);
+    toast({
+      title: '2FA Disabled',
+      description: 'Two-factor authentication has been disabled',
     });
   };
 
@@ -191,6 +206,67 @@ const SecuritySettings = () => {
           </CardContent>
         </Card>
 
+        {/* Two-Factor Authentication */}
+        <Card className={is2FAEnabled ? 'border-success/50' : ''}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Two-Factor Authentication
+              {is2FAEnabled && (
+                <span className="ml-2 flex items-center gap-1 text-sm font-normal text-success">
+                  <CheckCircle className="h-4 w-4" />
+                  Enabled
+                </span>
+              )}
+            </CardTitle>
+            <CardDescription>
+              Add an extra layer of security with an authenticator app
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {is2FAEnabled ? (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-success/10 p-4">
+                  <p className="text-sm text-success">
+                    Your account is protected with two-factor authentication. You'll need to enter a code from your authenticator app when signing in.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">Disable 2FA</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove the extra layer of security from your account. You can re-enable it anytime.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDisable2FA} className="bg-destructive hover:bg-destructive/90">
+                          Disable 2FA
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Use an authenticator app like Google Authenticator, Authy, or Microsoft Authenticator to generate one-time codes.
+                </p>
+                <Button onClick={() => setShow2FASetup(true)}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Set Up 2FA
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Account Information */}
         <Card>
           <CardHeader>
@@ -211,20 +287,6 @@ const SecuritySettings = () => {
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 Verified
               </span>
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Two-Factor Authentication</p>
-                <p className="text-sm text-muted-foreground">
-                  Add an extra layer of security
-                </p>
-              </div>
-              <Button variant="outline" size="sm" disabled>
-                Coming Soon
-              </Button>
             </div>
 
             <Separator />
@@ -287,6 +349,12 @@ const SecuritySettings = () => {
           </CardContent>
         </Card>
       </div>
+
+      <TwoFactorSetup
+        open={show2FASetup}
+        onClose={() => setShow2FASetup(false)}
+        onEnabled={handle2FAEnabled}
+      />
     </DashboardLayout>
   );
 };
