@@ -19,8 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Search, MessageCircle, BookOpen, HelpCircle, Mail, Send, Copy, CheckCircle } from 'lucide-react';
+import { Search, MessageCircle, BookOpen, HelpCircle, Mail, Send, Copy, CheckCircle, Ticket, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Help = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,12 +29,26 @@ const Help = () => {
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [messageForm, setMessageForm] = useState({
     name: '',
     email: '',
     subject: '',
     message: '',
   });
+
+  // Ticket lookup state
+  const [ticketLookupId, setTicketLookupId] = useState('');
+  const [ticketLookupResult, setTicketLookupResult] = useState<{
+    ticket_id: string;
+    subject: string;
+    status: string;
+    created_at: string;
+    message: string;
+  } | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+
   const { toast } = useToast();
 
   const categories = [
@@ -132,13 +147,7 @@ const Help = () => {
     },
   ];
 
-  const generateTicketId = () => {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `SE-${timestamp}-${random}`;
-  };
-
-  const handleSubmitMessage = (e: React.FormEvent) => {
+  const handleSubmitMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!messageForm.name || !messageForm.email || !messageForm.subject || !messageForm.message) {
@@ -150,27 +159,66 @@ const Help = () => {
       return;
     }
 
-    const newTicketId = generateTicketId();
-    setTicketId(newTicketId);
+    setIsSubmitting(true);
 
-    // Open mailto with the message details
-    const mailtoBody = `
-Ticket ID: ${newTicketId}
----
-Name: ${messageForm.name}
-Email: ${messageForm.email}
-Subject: ${messageForm.subject}
----
-Message:
-${messageForm.message}
----
-Please reference Ticket ID: ${newTicketId} in all future correspondence.
-    `.trim();
+    try {
+      const { data, error } = await supabase.functions.invoke('submit-support-ticket', {
+        body: {
+          name: messageForm.name,
+          email: messageForm.email,
+          subject: messageForm.subject,
+          message: messageForm.message,
+        },
+      });
 
-    const mailtoLink = `mailto:studyearnservices@gmail.com?subject=[Ticket: ${newTicketId}] ${encodeURIComponent(messageForm.subject)}&body=${encodeURIComponent(mailtoBody)}`;
-    
-    window.open(mailtoLink, '_blank');
-    setTicketSubmitted(true);
+      if (error) throw error;
+
+      setTicketId(data.ticketId);
+      setTicketSubmitted(true);
+      toast({
+        title: 'Message Sent!',
+        description: 'Your support ticket has been created and you\'ll receive a confirmation email.',
+      });
+    } catch (error: any) {
+      console.error('Error submitting ticket:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit your message. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTicketLookup = async () => {
+    if (!ticketLookupId.trim()) {
+      setLookupError('Please enter a ticket ID');
+      return;
+    }
+
+    setIsLookingUp(true);
+    setLookupError('');
+    setTicketLookupResult(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('ticket_id, subject, status, created_at, message')
+        .eq('ticket_id', ticketLookupId.trim().toUpperCase())
+        .single();
+
+      if (error || !data) {
+        setLookupError('No ticket found with this ID. Please check and try again.');
+        return;
+      }
+
+      setTicketLookupResult(data);
+    } catch (error) {
+      setLookupError('Failed to look up ticket. Please try again.');
+    } finally {
+      setIsLookingUp(false);
+    }
   };
 
   const copyTicketId = () => {
@@ -190,6 +238,21 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
     setIsMessageDialogOpen(false);
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'resolved':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'closed':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
   return (
     <PublicLayout>
       {/* Hero */}
@@ -207,6 +270,67 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                 className="h-14 pl-12 text-lg"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Ticket Lookup Section */}
+      <section className="border-b py-12">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-2xl">
+            <Card className="border-2 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary">
+                  <Ticket className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-semibold">Track Your Ticket</h3>
+                  <p className="text-sm text-muted-foreground">Enter your ticket ID to check status</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter Ticket ID (e.g., SE-XXXXX-XXXX)"
+                  value={ticketLookupId}
+                  onChange={(e) => {
+                    setTicketLookupId(e.target.value);
+                    setLookupError('');
+                  }}
+                  className="flex-1"
+                />
+                <Button onClick={handleTicketLookup} disabled={isLookingUp}>
+                  {isLookingUp ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Look Up'
+                  )}
+                </Button>
+              </div>
+              {lookupError && (
+                <p className="mt-2 text-sm text-destructive">{lookupError}</p>
+              )}
+              {ticketLookupResult && (
+                <div className="mt-4 rounded-lg border bg-muted/50 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <code className="font-bold text-primary">{ticketLookupResult.ticket_id}</code>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(ticketLookupResult.status)}`}>
+                      {ticketLookupResult.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <p className="font-medium mb-1">{ticketLookupResult.subject}</p>
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{ticketLookupResult.message}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Submitted: {new Date(ticketLookupResult.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+            </Card>
           </div>
         </div>
       </section>
@@ -310,6 +434,7 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                             placeholder="Enter your name"
                             value={messageForm.name}
                             onChange={(e) => setMessageForm({ ...messageForm, name: e.target.value })}
+                            disabled={isSubmitting}
                           />
                         </div>
                         <div className="space-y-2">
@@ -320,6 +445,7 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                             placeholder="Enter your email"
                             value={messageForm.email}
                             onChange={(e) => setMessageForm({ ...messageForm, email: e.target.value })}
+                            disabled={isSubmitting}
                           />
                         </div>
                         <div className="space-y-2">
@@ -329,6 +455,7 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                             placeholder="What is this about?"
                             value={messageForm.subject}
                             onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
+                            disabled={isSubmitting}
                           />
                         </div>
                         <div className="space-y-2">
@@ -339,11 +466,21 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                             rows={4}
                             value={messageForm.message}
                             onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                            disabled={isSubmitting}
                           />
                         </div>
-                        <Button type="submit" className="w-full gradient-primary">
-                          <Send className="mr-2 h-4 w-4" />
-                          Submit Message
+                        <Button type="submit" className="w-full gradient-primary" disabled={isSubmitting}>
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Submit Message
+                            </>
+                          )}
                         </Button>
                       </form>
                     </>
@@ -355,7 +492,7 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                       <DialogHeader>
                         <DialogTitle className="font-display text-2xl">Message Submitted!</DialogTitle>
                         <DialogDescription className="mt-2">
-                          Your message has been sent to our support team. Please save your ticket ID for reference.
+                          Your message has been sent to our support team and saved. You'll receive a confirmation email shortly.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="mt-6">
@@ -376,7 +513,7 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
                           </Button>
                         </div>
                         <p className="mt-4 text-sm text-muted-foreground">
-                          Use this ticket ID when contacting us for faster assistance.
+                          Use this ticket ID to track your request status above.
                         </p>
                       </div>
                       <Button onClick={resetMessageForm} className="mt-6 w-full" variant="outline">

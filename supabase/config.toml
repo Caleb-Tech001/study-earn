@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.realtime-voice-session]
 verify_jwt = false
+
+[functions.submit-support-ticket]
+verify_jwt = false
