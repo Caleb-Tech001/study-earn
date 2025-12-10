@@ -7,8 +7,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useCommunity } from '@/contexts/CommunityContext';
 import { generateLeaderboardData } from '@/utils/leaderboardData';
 import { 
   MessageSquare, 
@@ -29,9 +37,12 @@ import {
   Minus,
 } from 'lucide-react';
 
+const categories = ['General', 'Python', 'JavaScript', 'Web Development', 'Data Structures', 'Data Science', 'Machine Learning', 'Mobile Dev'];
+
 const Community = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { questions, addQuestion, voteQuestion } = useCommunity();
   const [activeTab, setActiveTab] = useState('discussions');
   const [showNewQuestion, setShowNewQuestion] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '', category: 'General' });
@@ -48,48 +59,6 @@ const Community = () => {
     generateLeaderboardData(userName, userAvatar, 100, true), 
     [userName, userAvatar]
   );
-
-  const discussions = [
-    {
-      id: '1',
-      author: 'Sarah Williams',
-      avatar: '',
-      title: 'Tips for mastering Python decorators?',
-      content: 'I\'m struggling with understanding decorators in Python. Any resources or explanations that helped you?',
-      category: 'Python',
-      likes: 24,
-      dislikes: 2,
-      replies: 8,
-      time: '2 hours ago',
-      isBestAnswer: false,
-    },
-    {
-      id: '2',
-      author: 'Michael Chen',
-      avatar: '',
-      title: 'Best practices for learning Data Structures',
-      content: 'What approach did you find most effective when learning DSA? Looking for study tips!',
-      category: 'Data Structures',
-      likes: 18,
-      dislikes: 1,
-      replies: 12,
-      time: '5 hours ago',
-      isBestAnswer: true,
-    },
-    {
-      id: '3',
-      author: 'Emma Davis',
-      avatar: '',
-      title: 'Study group for Web Development?',
-      content: 'Anyone interested in forming a study group for the Web Dev Fundamentals course?',
-      category: 'Web Development',
-      likes: 32,
-      dislikes: 0,
-      replies: 15,
-      time: '1 day ago',
-      isBestAnswer: false,
-    },
-  ];
 
   const missions = [
     {
@@ -142,6 +111,7 @@ const Community = () => {
   ];
 
   const handleVote = (type: 'up' | 'down', id: string) => {
+    voteQuestion(id, type);
     toast({
       title: type === 'up' ? 'Upvoted!' : 'Downvoted',
       description: 'Your vote has been recorded',
@@ -167,8 +137,16 @@ const Community = () => {
       return;
     }
 
+    addQuestion({
+      author: userName,
+      avatar: userAvatar,
+      title: newQuestion.title,
+      content: newQuestion.content,
+      category: newQuestion.category,
+    });
+
     toast({
-      title: 'Question Posted!',
+      title: 'Question Posted! 🎉',
       description: 'Your question has been submitted to the community',
     });
     setNewQuestion({ title: '', content: '', category: 'General' });
@@ -187,6 +165,11 @@ const Community = () => {
     if (change < 0) return <ArrowDown className="h-3 w-3 text-destructive" />;
     return <Minus className="h-3 w-3 text-muted-foreground" />;
   };
+
+  // Filter questions for different tabs
+  const recentQuestions = [...questions].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const popularQuestions = [...questions].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes));
+  const unansweredQuestions = questions.filter(q => q.replies === 0 && !q.isBestAnswer);
 
   const LeaderboardTable = ({ data }: { data: typeof globalLeaderboard }) => (
     <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -234,6 +217,67 @@ const Community = () => {
     </div>
   );
 
+  const QuestionCard = ({ discussion }: { discussion: typeof questions[0] }) => (
+    <Card className={`border-2 p-6 transition-smooth hover:shadow-lg ${discussion.isCurrentUser ? 'border-primary/50 bg-primary/5' : ''}`}>
+      <div className="flex gap-4">
+        {/* Vote Section */}
+        <div className="flex flex-col items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={() => handleVote('up', discussion.id)}
+          >
+            <ThumbsUp className="h-4 w-4" />
+          </Button>
+          <span className="font-bold text-primary">{discussion.likes - discussion.dislikes}</span>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={() => handleVote('down', discussion.id)}
+          >
+            <ThumbsDown className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Content Section */}
+        <div className="flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={discussion.avatar} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {discussion.author.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">{discussion.author}</span>
+            {discussion.isCurrentUser && (
+              <Badge variant="outline" className="text-xs">You</Badge>
+            )}
+            <span className="text-sm text-muted-foreground">• {discussion.time}</span>
+            <Badge variant="secondary">{discussion.category}</Badge>
+            {discussion.isBestAnswer && (
+              <Badge className="bg-success text-success-foreground">
+                <CheckCircle className="mr-1 h-3 w-3" />
+                Answered
+              </Badge>
+            )}
+          </div>
+          <h3 className="mb-2 font-display text-lg font-bold hover:text-primary cursor-pointer">
+            {discussion.title}
+          </h3>
+          <p className="text-sm text-muted-foreground">{discussion.content}</p>
+          <div className="mt-3 flex items-center gap-4">
+            <Button variant="ghost" size="sm">
+              <Reply className="mr-2 h-4 w-4" />
+              {discussion.replies} Answers
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -270,6 +314,21 @@ const Community = () => {
                   onChange={(e) => setNewQuestion(prev => ({ ...prev, content: e.target.value }))}
                 />
               </div>
+              <div>
+                <Select
+                  value={newQuestion.category}
+                  onValueChange={(value) => setNewQuestion(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex gap-2">
                 <Button onClick={handlePostQuestion}>Post Question</Button>
                 <Button variant="outline" onClick={() => setShowNewQuestion(false)}>Cancel</Button>
@@ -292,78 +351,42 @@ const Community = () => {
               <div className="space-y-4 lg:col-span-2">
                 <Tabs defaultValue="recent" className="w-full">
                   <TabsList>
-                    <TabsTrigger value="recent">Recent</TabsTrigger>
+                    <TabsTrigger value="recent">Recent ({recentQuestions.length})</TabsTrigger>
                     <TabsTrigger value="popular">Popular</TabsTrigger>
-                    <TabsTrigger value="unanswered">Unanswered</TabsTrigger>
+                    <TabsTrigger value="unanswered">Unanswered ({unansweredQuestions.length})</TabsTrigger>
                   </TabsList>
                   <TabsContent value="recent" className="mt-4 space-y-4">
-                    {discussions.map((discussion) => (
-                      <Card key={discussion.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
-                        <div className="flex gap-4">
-                          {/* Vote Section */}
-                          <div className="flex flex-col items-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleVote('up', discussion.id)}
-                            >
-                              <ThumbsUp className="h-4 w-4" />
-                            </Button>
-                            <span className="font-bold text-primary">{discussion.likes - discussion.dislikes}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleVote('down', discussion.id)}
-                            >
-                              <ThumbsDown className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          {/* Content Section */}
-                          <div className="flex-1">
-                            <div className="mb-2 flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={discussion.avatar} />
-                                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                                  {discussion.author.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm font-medium">{discussion.author}</span>
-                              <span className="text-sm text-muted-foreground">• {discussion.time}</span>
-                              <Badge variant="secondary">{discussion.category}</Badge>
-                              {discussion.isBestAnswer && (
-                                <Badge className="bg-success text-success-foreground">
-                                  <CheckCircle className="mr-1 h-3 w-3" />
-                                  Answered
-                                </Badge>
-                              )}
-                            </div>
-                            <h3 className="mb-2 font-display text-lg font-bold hover:text-primary cursor-pointer">
-                              {discussion.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">{discussion.content}</p>
-                            <div className="mt-3 flex items-center gap-4">
-                              <Button variant="ghost" size="sm">
-                                <Reply className="mr-2 h-4 w-4" />
-                                {discussion.replies} Answers
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                    {recentQuestions.length === 0 ? (
+                      <Card className="border-2 p-8 text-center">
+                        <p className="text-muted-foreground">No questions yet. Be the first to ask!</p>
                       </Card>
-                    ))}
+                    ) : (
+                      recentQuestions.map((discussion) => (
+                        <QuestionCard key={discussion.id} discussion={discussion} />
+                      ))
+                    )}
                   </TabsContent>
-                  <TabsContent value="popular">
-                    <Card className="border-2 p-8 text-center">
-                      <p className="text-muted-foreground">Popular discussions coming soon</p>
-                    </Card>
+                  <TabsContent value="popular" className="mt-4 space-y-4">
+                    {popularQuestions.length === 0 ? (
+                      <Card className="border-2 p-8 text-center">
+                        <p className="text-muted-foreground">No popular questions yet</p>
+                      </Card>
+                    ) : (
+                      popularQuestions.map((discussion) => (
+                        <QuestionCard key={discussion.id} discussion={discussion} />
+                      ))
+                    )}
                   </TabsContent>
-                  <TabsContent value="unanswered">
-                    <Card className="border-2 p-8 text-center">
-                      <p className="text-muted-foreground">Unanswered questions coming soon</p>
-                    </Card>
+                  <TabsContent value="unanswered" className="mt-4 space-y-4">
+                    {unansweredQuestions.length === 0 ? (
+                      <Card className="border-2 p-8 text-center">
+                        <p className="text-muted-foreground">All questions have been answered!</p>
+                      </Card>
+                    ) : (
+                      unansweredQuestions.map((discussion) => (
+                        <QuestionCard key={discussion.id} discussion={discussion} />
+                      ))
+                    )}
                   </TabsContent>
                 </Tabs>
               </div>
@@ -398,7 +421,7 @@ const Community = () => {
                       <p className="text-sm text-muted-foreground">Active Members</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">456</p>
+                      <p className="text-2xl font-bold">{questions.length}</p>
                       <p className="text-sm text-muted-foreground">Discussions</p>
                     </div>
                     <div>
@@ -458,12 +481,12 @@ const Community = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Star className="h-5 w-5 text-accent" />
-                      <span className="font-bold text-accent">+{mission.reward} pts</span>
+                      <span className="font-bold">{mission.reward} points</span>
                     </div>
                     <Button 
+                      variant={mission.completed ? 'secondary' : 'default'}
                       onClick={() => handleCompleteMission(mission)}
                       disabled={mission.completed}
-                      variant={mission.completed ? 'outline' : 'default'}
                     >
                       {mission.completed ? 'Completed' : 'Join Mission'}
                     </Button>
@@ -479,23 +502,23 @@ const Community = () => {
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Trophy className="h-6 w-6 text-accent" />
-                  <h2 className="font-display text-2xl font-bold">Rankings</h2>
+                  <h3 className="font-display text-2xl font-bold">Global Rankings</h3>
                 </div>
               </div>
 
-              <Tabs defaultValue="alltime" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="alltime">All Time</TabsTrigger>
-                  <TabsTrigger value="weekly">This Week</TabsTrigger>
-                  <TabsTrigger value="monthly">This Month</TabsTrigger>
+              <Tabs defaultValue="all-time" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="all-time">All Time</TabsTrigger>
+                  <TabsTrigger value="this-week">This Week</TabsTrigger>
+                  <TabsTrigger value="this-month">This Month</TabsTrigger>
                 </TabsList>
-                <TabsContent value="alltime" className="mt-4">
+                <TabsContent value="all-time">
                   <LeaderboardTable data={globalLeaderboard} />
                 </TabsContent>
-                <TabsContent value="weekly" className="mt-4">
+                <TabsContent value="this-week">
                   <LeaderboardTable data={weeklyLeaderboard} />
                 </TabsContent>
-                <TabsContent value="monthly" className="mt-4">
+                <TabsContent value="this-month">
                   <LeaderboardTable data={globalLeaderboard.slice(0, 50)} />
                 </TabsContent>
               </Tabs>
