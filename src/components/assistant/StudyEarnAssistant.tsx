@@ -27,6 +27,7 @@ import { useAssistant, AttachmentInfo } from '@/contexts/AssistantContext';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { SoundWaveAnimation } from './SoundWaveAnimation';
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -481,20 +482,22 @@ export const StudyEarnAssistant = () => {
             </div>
 
             {/* Messages */}
-            {/* Conversation Mode Indicator */}
+            {/* Conversation Mode Indicator with Sound Waves */}
             {conversationMode && (
-              <div className="flex items-center justify-center gap-2 border-b border-border bg-green-500/10 px-4 py-2">
-                <div className={cn(
-                  "h-2 w-2 rounded-full",
-                  isListeningInConversation ? "bg-green-500 animate-pulse" : 
-                  isSpeaking ? "bg-blue-500 animate-pulse" :
-                  isLoading ? "bg-yellow-500 animate-pulse" : "bg-green-500"
-                )} />
+              <div className="flex items-center justify-center gap-3 border-b border-border bg-green-500/10 px-4 py-2">
+                <SoundWaveAnimation 
+                  isActive={isListeningInConversation || isSpeaking || isLoading}
+                  variant={isListeningInConversation ? 'listening' : isSpeaking ? 'speaking' : 'thinking'}
+                />
                 <span className="text-xs font-medium text-foreground">
                   {isListeningInConversation ? "Listening..." : 
                    isSpeaking ? "Speaking..." : 
                    isLoading ? "Thinking..." : "Voice conversation active"}
                 </span>
+                <SoundWaveAnimation 
+                  isActive={isListeningInConversation || isSpeaking || isLoading}
+                  variant={isListeningInConversation ? 'listening' : isSpeaking ? 'speaking' : 'thinking'}
+                />
               </div>
             )}
 
@@ -652,22 +655,6 @@ export const StudyEarnAssistant = () => {
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleRecording}
-                  className={cn(
-                    "h-9 w-9 shrink-0",
-                    isRecording && "bg-destructive/10 text-destructive"
-                  )}
-                  title={isRecording ? "Stop recording" : "Voice input"}
-                >
-                  {isRecording ? (
-                    <MicOff className="h-4 w-4" />
-                  ) : (
-                    <Mic className="h-4 w-4" />
-                  )}
-                </Button>
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -676,6 +663,25 @@ export const StudyEarnAssistant = () => {
                   className="flex-1"
                   disabled={isLoading}
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleRecording}
+                  className={cn(
+                    "h-9 w-9 shrink-0 relative",
+                    isRecording && "bg-destructive/10 text-destructive"
+                  )}
+                  title={isRecording ? "Stop recording" : "Voice input"}
+                >
+                  {isRecording ? (
+                    <div className="flex items-center justify-center">
+                      <SoundWaveAnimation isActive={true} variant="listening" className="absolute" />
+                      <MicOff className="h-4 w-4 opacity-0" />
+                    </div>
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                </Button>
                 <Button
                   onClick={handleSend}
                   disabled={isLoading || (!input.trim() && attachments.length === 0)}
