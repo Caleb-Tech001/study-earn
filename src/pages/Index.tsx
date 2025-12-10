@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import Landing from './Landing';
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -14,8 +15,8 @@ const Index = () => {
     return <Navigate to={`/${userRole}/dashboard`} replace />;
   }
 
-  // Redirect unauthenticated users to welcome page
-  return <Navigate to="/welcome" replace />;
+  // Show landing page for unauthenticated users
+  return <Landing />;
 };
 
 export default Index;
