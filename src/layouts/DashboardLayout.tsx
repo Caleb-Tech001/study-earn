@@ -8,14 +8,11 @@ import {
   User,
   Settings,
   LogOut,
-  Bell,
   Menu,
   GraduationCap,
   Users,
   ShoppingBag,
-  Trophy,
   MessageSquare,
-  Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -41,18 +39,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   
-  // Get user role from metadata
   const userRole = user?.user_metadata?.role || 'learner';
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   const getNavLinks = () => {
     if (!user) return [];
-
-    const baseLinks = [
-      { icon: Activity, label: 'Activity', path: `/${userRole}/activity` },
-      { icon: User, label: 'Profile', path: `/${userRole}/profile` },
-      { icon: Settings, label: 'Settings', path: `/${userRole}/settings` },
-    ];
 
     switch (userRole) {
       case 'learner':
@@ -61,9 +52,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           { icon: BookOpen, label: 'My Modules', path: '/learner/modules' },
           { icon: Wallet, label: 'Wallet', path: '/learner/wallet' },
           { icon: ShoppingBag, label: 'Marketplace', path: '/learner/marketplace' },
-          { icon: Trophy, label: 'Leaderboard', path: '/learner/leaderboard' },
           { icon: MessageSquare, label: 'Community', path: '/learner/community' },
-          ...baseLinks,
         ];
       case 'instructor':
         return [
@@ -71,25 +60,20 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           { icon: GraduationCap, label: 'My Courses', path: '/instructor/courses' },
           { icon: Users, label: 'Students', path: '/instructor/students' },
           { icon: Wallet, label: 'Payout', path: '/instructor/payout' },
-          ...baseLinks,
         ];
       case 'institution':
         return [
           { icon: LayoutDashboard, label: 'Dashboard', path: '/institution/dashboard' },
           { icon: Users, label: 'Cohorts', path: '/institution/cohorts' },
-          { icon: Trophy, label: 'Rewards', path: '/institution/rewards' },
-          ...baseLinks,
         ];
       case 'admin':
         return [
           { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
           { icon: Users, label: 'Users', path: '/admin/users' },
           { icon: Wallet, label: 'Finance', path: '/admin/finance' },
-          { icon: Activity, label: 'Analytics', path: '/admin/analytics' },
-          ...baseLinks,
         ];
       default:
-        return baseLinks;
+        return [];
     }
   };
 
@@ -128,14 +112,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex min-h-screen bg-muted/30">
-      {/* Desktop Sidebar */}
       <aside className="hidden w-64 border-r border-border bg-card lg:block">
         <NavContent />
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1">
-        {/* Top Bar */}
         <header className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="flex h-16 items-center justify-between px-4 md:px-6">
             <Sheet>
@@ -150,9 +131,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </Sheet>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationDropdown />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -193,7 +172,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>

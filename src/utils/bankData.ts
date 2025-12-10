@@ -1,0 +1,65 @@
+export const nigerianBanks = [
+  { code: 'access', name: 'Access Bank' },
+  { code: 'gtb', name: 'Guaranty Trust Bank (GTB)' },
+  { code: 'zenith', name: 'Zenith Bank' },
+  { code: 'firstbank', name: 'First Bank of Nigeria' },
+  { code: 'uba', name: 'United Bank for Africa (UBA)' },
+  { code: 'fidelity', name: 'Fidelity Bank' },
+  { code: 'fcmb', name: 'First City Monument Bank (FCMB)' },
+  { code: 'union', name: 'Union Bank of Nigeria' },
+  { code: 'stanbic', name: 'Stanbic IBTC Bank' },
+  { code: 'sterling', name: 'Sterling Bank' },
+  { code: 'wema', name: 'Wema Bank' },
+  { code: 'ecobank', name: 'Ecobank Nigeria' },
+  { code: 'keystone', name: 'Keystone Bank' },
+  { code: 'polaris', name: 'Polaris Bank' },
+  { code: 'providus', name: 'Providus Bank' },
+  { code: 'jaiz', name: 'Jaiz Bank' },
+  { code: 'unity', name: 'Unity Bank' },
+  { code: 'heritage', name: 'Heritage Bank' },
+  { code: 'titan', name: 'Titan Trust Bank' },
+  { code: 'globus', name: 'Globus Bank' },
+  { code: 'suntrust', name: 'SunTrust Bank' },
+  { code: 'taj', name: 'TAJ Bank' },
+  { code: 'lotus', name: 'Lotus Bank' },
+  { code: 'premium', name: 'Premium Trust Bank' },
+  { code: 'parallex', name: 'Parallex Bank' },
+  // Microfinance Banks & Digital Banks
+  { code: 'opay', name: 'OPay (Paycom)' },
+  { code: 'palmpay', name: 'PalmPay' },
+  { code: 'kuda', name: 'Kuda Bank' },
+  { code: 'moniepoint', name: 'Moniepoint MFB' },
+  { code: 'carbon', name: 'Carbon (One Finance)' },
+  { code: 'rubies', name: 'Rubies Bank' },
+  { code: 'vfd', name: 'VFD Microfinance Bank' },
+  { code: 'sparkle', name: 'Sparkle MFB' },
+  { code: 'eyowo', name: 'Eyowo MFB' },
+  { code: 'fairmoney', name: 'FairMoney MFB' },
+  { code: 'chipper', name: 'Chipper Cash' },
+  { code: 'gomoney', name: 'GoMoney' },
+];
+
+export const cryptoExchanges = [
+  { code: 'binance', name: 'Binance', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'coinbase', name: 'Coinbase', networks: ['USDT-ERC20'] },
+  { code: 'okx', name: 'OKX', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'bybit', name: 'Bybit', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'kucoin', name: 'KuCoin', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'gate', name: 'Gate.io', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'bitget', name: 'Bitget', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'mexc', name: 'MEXC', networks: ['USDT-TRC20', 'USDT-BEP20', 'USDT-ERC20'] },
+  { code: 'crypto', name: 'Crypto.com', networks: ['USDT-ERC20'] },
+  { code: 'luno', name: 'Luno', networks: ['BTC'] },
+  { code: 'quidax', name: 'Quidax', networks: ['USDT-TRC20'] },
+  { code: 'roqqu', name: 'Roqqu', networks: ['USDT-TRC20', 'USDT-BEP20'] },
+];
+
+export const networkFees: Record<string, number> = {
+  'USDT-TRC20': 1.00,
+  'USDT-BEP20': 0.50,
+  'USDT-ERC20': 5.00,
+  'BTC': 0.0001,
+};
+
+export const usdToNaira = 1650; // Example exchange rate
+export const pointsToUsd = 1000; // 1000 points = $1

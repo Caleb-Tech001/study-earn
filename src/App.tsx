@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Public Pages
@@ -34,9 +35,7 @@ import LearnerDashboard from "./pages/learner/LearnerDashboard";
 import Modules from "./pages/learner/Modules";
 import Wallet from "./pages/learner/Wallet";
 import Marketplace from "./pages/learner/Marketplace";
-import Leaderboard from "./pages/learner/Leaderboard";
 import Community from "./pages/learner/Community";
-import Activity from "./pages/learner/Activity";
 import Profile from "./pages/learner/Profile";
 import Settings from "./pages/learner/Settings";
 
@@ -58,6 +57,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <NotificationProvider>
           <Routes>
             {/* Root & Public Routes */}
             <Route path="/" element={<Index />} />
@@ -129,30 +129,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/learner/leaderboard"
-              element={
-                <ProtectedRoute allowedRoles={['learner']}>
-                  <Leaderboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/learner/community"
-              element={
-                <ProtectedRoute allowedRoles={['learner']}>
-                  <Community />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/learner/activity"
-              element={
-                <ProtectedRoute allowedRoles={['learner']}>
-                  <Activity />
-                </ProtectedRoute>
-              }
-            />
+            
             <Route
               path="/learner/profile"
               element={
@@ -203,6 +180,7 @@ const App = () => (
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </NotificationProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
