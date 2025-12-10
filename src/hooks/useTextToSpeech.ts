@@ -1,11 +1,28 @@
-import { useState, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export const useTextToSpeech = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const speak = useCallback(async (text: string) => {
+  // Load voices on mount
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length > 0) {
+        setVoices(availableVoices);
+      }
+    };
+
+    loadVoices();
+    
+    // Some browsers load voices asynchronously
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  const speak = useCallback((text: string) => {
     if (!text || isSpeaking) return;
 
     try {
@@ -34,56 +51,50 @@ export const useTextToSpeech = () => {
         return;
       }
 
-      // Limit text length
+      // Limit text length for browser TTS
       const truncatedText = cleanText.length > 2500 ? cleanText.substring(0, 2500) + '...' : cleanText;
 
-      console.log('Calling text-to-speech edge function...');
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: truncatedText },
-      });
+      console.log('Speaking with browser TTS:', truncatedText.substring(0, 50) + '...');
 
-      console.log('TTS response:', { data, error });
+      const utterance = new SpeechSynthesisUtterance(truncatedText);
+      utteranceRef.current = utterance;
 
-      if (error) {
-        console.error('TTS edge function error:', error);
-        throw error;
+      // Select a good voice - prefer Google or premium voices
+      const preferredVoice = voices.find(
+        (v) => v.name.includes('Google') && v.lang.startsWith('en')
+      ) || voices.find(
+        (v) => v.name.includes('Samantha') || v.name.includes('Microsoft Zira') || v.name.includes('Microsoft David')
+      ) || voices.find(v => v.lang.startsWith('en-US')) 
+        || voices.find(v => v.lang.startsWith('en')) 
+        || voices[0];
+      
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        console.log('Using voice:', preferredVoice.name);
       }
 
-      // Use browser's built-in speech synthesis
-      if (data?.useBrowserTTS && data?.text) {
-        const utterance = new SpeechSynthesisUtterance(data.text);
-        utteranceRef.current = utterance;
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-        // Get available voices and select a good one
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(
-          (v) => v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Microsoft')
-        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-        
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        }
+      utterance.onend = () => {
+        console.log('Speech ended');
+        setIsSpeaking(false);
+        utteranceRef.current = null;
+      };
 
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+      utterance.onerror = (event) => {
+        console.error('Speech error:', event.error);
+        setIsSpeaking(false);
+        utteranceRef.current = null;
+      };
 
-        utterance.onend = () => {
-          setIsSpeaking(false);
-          utteranceRef.current = null;
-        };
-
-        utterance.onerror = () => {
-          setIsSpeaking(false);
-          utteranceRef.current = null;
-        };
-
-        window.speechSynthesis.speak(utterance);
-      }
+      window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error('TTS error:', error);
       setIsSpeaking(false);
     }
-  }, [isSpeaking]);
+  }, [isSpeaking, voices]);
 
   const stop = useCallback(() => {
     if (window.speechSynthesis.speaking) {
