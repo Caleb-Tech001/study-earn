@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { CommunityProvider } from "@/contexts/CommunityContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Public Pages
@@ -61,8 +62,9 @@ const App = () => (
         <AuthProvider>
           <NotificationProvider>
             <CartProvider>
-              <CommunityProvider>
-                <Routes>
+              <WalletProvider>
+                <CommunityProvider>
+                  <Routes>
                   {/* Root & Public Routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/landing" element={<Landing />} />
@@ -188,10 +190,11 @@ const App = () => (
                     }
                   />
 
-                  {/* Catch-all route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </CommunityProvider>
+                    {/* Catch-all route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </CommunityProvider>
+              </WalletProvider>
             </CartProvider>
           </NotificationProvider>
         </AuthProvider>
