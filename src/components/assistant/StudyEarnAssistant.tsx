@@ -13,11 +13,17 @@ import {
   BookOpen,
   HelpCircle,
   Target,
-  Loader2
+  Loader2,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAssistant, AttachmentInfo } from '@/contexts/AssistantContext';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -64,9 +70,6 @@ declare global {
     webkitSpeechRecognition?: new () => ISpeechRecognition;
   }
 }
-import { useAssistant, AttachmentInfo } from '@/contexts/AssistantContext';
-import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 const QUICK_ACTIONS = [
   { icon: Wallet, label: 'Show My Balance', prompt: 'What is my current wallet balance and points?' },
@@ -88,12 +91,15 @@ export const StudyEarnAssistant = () => {
     getUserContext 
   } = useAssistant();
   
+  const { speak, stop, isSpeaking } = useTextToSpeech();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
+  const lastSpokenIdRef = useRef<string | null>(null);
   const { toast } = useToast();
 
   // Auto-scroll to bottom
@@ -102,6 +108,22 @@ export const StudyEarnAssistant = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  // Auto-speak new assistant messages
+  useEffect(() => {
+    if (!voiceEnabled || messages.length === 0) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (
+      lastMessage.role === 'assistant' && 
+      lastMessage.content && 
+      lastMessage.id !== lastSpokenIdRef.current &&
+      !isLoading
+    ) {
+      lastSpokenIdRef.current = lastMessage.id;
+      speak(lastMessage.content);
+    }
+  }, [messages, voiceEnabled, speak, isLoading]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -163,6 +185,17 @@ export const StudyEarnAssistant = () => {
     }
   };
 
+  const toggleVoice = () => {
+    if (isSpeaking) {
+      stop();
+    }
+    setVoiceEnabled(!voiceEnabled);
+    toast({
+      title: voiceEnabled ? 'Voice Off' : 'Voice On',
+      description: voiceEnabled ? 'AI will no longer speak responses' : 'AI will speak responses aloud',
+    });
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -202,6 +235,11 @@ export const StudyEarnAssistant = () => {
   const handleSend = async () => {
     if (!input.trim() && attachments.length === 0) return;
 
+    // Stop any playing audio when user sends a message
+    if (isSpeaking) {
+      stop();
+    }
+
     const messageContent = attachments.length > 0
       ? `${input}\n\n[Attached files: ${attachments.map(a => a.name).join(', ')}]`
       : input;
@@ -212,6 +250,9 @@ export const StudyEarnAssistant = () => {
   };
 
   const handleQuickAction = async (prompt: string) => {
+    if (isSpeaking) {
+      stop();
+    }
     await sendMessage(prompt);
   };
 
@@ -263,6 +304,22 @@ export const StudyEarnAssistant = () => {
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleVoice}
+                  className={cn(
+                    "h-8 w-8",
+                    isSpeaking && "text-primary animate-pulse"
+                  )}
+                  title={voiceEnabled ? "Turn off voice" : "Turn on voice"}
+                >
+                  {voiceEnabled ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <VolumeX className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
