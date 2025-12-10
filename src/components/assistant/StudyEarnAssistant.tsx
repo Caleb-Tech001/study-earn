@@ -16,7 +16,6 @@ import {
   Loader2,
   Volume2,
   VolumeX,
-  MessageSquare,
   Phone,
   PhoneOff
 } from 'lucide-react';
@@ -28,6 +27,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { SoundWaveAnimation } from './SoundWaveAnimation';
+import { RealtimeVoiceChat } from './RealtimeVoiceChat';
 
 // Web Speech API types
 interface SpeechRecognitionEvent extends Event {
@@ -101,6 +101,7 @@ export const StudyEarnAssistant = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [conversationMode, setConversationMode] = useState(false);
   const [isListeningInConversation, setIsListeningInConversation] = useState(false);
+  const [realtimeVoiceOpen, setRealtimeVoiceOpen] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -429,21 +430,13 @@ export const StudyEarnAssistant = () => {
               </div>
               <div className="flex items-center gap-1">
                 <Button
-                  variant={conversationMode ? "default" : "ghost"}
+                  variant="ghost"
                   size="icon"
-                  onClick={toggleConversationMode}
-                  className={cn(
-                    "h-8 w-8",
-                    conversationMode && "bg-green-500 hover:bg-green-600 text-white",
-                    isListeningInConversation && "animate-pulse"
-                  )}
-                  title={conversationMode ? "End voice conversation" : "Start voice conversation"}
+                  onClick={() => setRealtimeVoiceOpen(true)}
+                  className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                  title="Start real-time voice conversation"
                 >
-                  {conversationMode ? (
-                    <PhoneOff className="h-4 w-4" />
-                  ) : (
-                    <Phone className="h-4 w-4" />
-                  )}
+                  <Phone className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -699,6 +692,18 @@ export const StudyEarnAssistant = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Realtime Voice Chat Modal */}
+      <RealtimeVoiceChat
+        isOpen={realtimeVoiceOpen}
+        onClose={() => setRealtimeVoiceOpen(false)}
+        userContext={{
+          userName: context.userName,
+          userRole: context.role,
+          pointsBalance: context.pointsBalance,
+          currentPage: context.currentPage,
+        }}
+      />
     </>
   );
 };
