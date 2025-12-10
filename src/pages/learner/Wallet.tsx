@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { WithdrawalModal } from '@/components/wallet/WithdrawalModal';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { useWallet } from '@/contexts/WalletContext';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 import {
   Wallet as WalletIcon,
   TrendingUp,
@@ -28,9 +30,8 @@ const Wallet = () => {
   const { toast } = useToast();
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
   const { rate: dollarToNaira, lastUpdated, isLoading, change24h, refresh } = useExchangeRate();
+  const { balance, pointsBalance } = useWallet();
   
-  const balance = 245.5;
-  const pointsBalance = 24550;
   const totalEarned = 1250.0;
   const totalWithdrawn = 800.0;
   const totalRedeemed = 204.5;
@@ -221,8 +222,12 @@ const Wallet = () => {
           <Card className="border-2 bg-gradient-to-br from-primary to-secondary p-6 text-white">
             <div className="mb-4">
               <p className="mb-1 text-sm opacity-90">Available Balance</p>
-              <p className="font-display text-5xl font-bold">${balance.toFixed(2)}</p>
-              <p className="mt-1 text-sm opacity-80">≈ ₦{nairaBalance.toLocaleString()}</p>
+              <p className="font-display text-5xl font-bold">
+                <AnimatedCounter value={balance} prefix="$" decimals={2} />
+              </p>
+              <p className="mt-1 text-sm opacity-80">
+                ≈ ₦<AnimatedCounter value={nairaBalance} decimals={0} />
+              </p>
             </div>
 
             <div className="flex gap-3">
@@ -248,7 +253,9 @@ const Wallet = () => {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Points Balance</p>
-                <p className="font-display text-4xl font-bold text-primary">{pointsBalance.toLocaleString()}</p>
+                <p className="font-display text-4xl font-bold text-primary">
+                  <AnimatedCounter value={pointsBalance} decimals={0} />
+                </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {pointsToDollar.toLocaleString()} points = $1
                 </p>

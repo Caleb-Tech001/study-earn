@@ -11,11 +11,13 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet';
 import { useCart } from '@/contexts/CartContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 
 export const CartDropdown = () => {
   const { items, removeFromCart, clearCart, getTotalCost, itemCount } = useCart();
+  const { balance, deductBalance } = useWallet();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,12 +31,17 @@ export const CartDropdown = () => {
       return;
     }
 
-    toast({
-      title: 'Checkout Successful! 🎉',
-      description: `You've purchased ${items.length} items for $${getTotalCost().toFixed(2)}`,
-    });
-    clearCart();
-    setIsOpen(false);
+    const totalCost = getTotalCost();
+    const success = deductBalance(totalCost);
+    
+    if (success) {
+      toast({
+        title: 'Checkout Successful! 🎉',
+        description: `You've purchased ${items.length} items for $${totalCost.toFixed(2)}`,
+      });
+      clearCart();
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -106,11 +113,22 @@ export const CartDropdown = () => {
           <>
             <Separator />
             <SheetFooter className="mt-4 flex-col gap-3">
-              <div className="flex w-full items-center justify-between text-lg">
-                <span className="font-medium">Total:</span>
-                <span className="font-bold text-primary">
-                  ${getTotalCost().toFixed(2)}
-                </span>
+              <div className="flex w-full flex-col gap-1">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>Your Balance:</span>
+                  <span>${balance.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-lg">
+                  <span className="font-medium">Total:</span>
+                  <span className={`font-bold ${getTotalCost() > balance ? 'text-destructive' : 'text-primary'}`}>
+                    ${getTotalCost().toFixed(2)}
+                  </span>
+                </div>
+                {getTotalCost() > balance && (
+                  <p className="text-xs text-destructive">
+                    Insufficient balance. You need ${(getTotalCost() - balance).toFixed(2)} more.
+                  </p>
+                )}
               </div>
               <div className="flex w-full gap-2">
                 <Button variant="outline" className="flex-1" onClick={clearCart}>
