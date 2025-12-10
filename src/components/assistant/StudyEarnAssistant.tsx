@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   X, 
   Send, 
@@ -25,6 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAssistant, AttachmentInfo } from '@/contexts/AssistantContext';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { SoundWaveAnimation } from './SoundWaveAnimation';
 import { RealtimeVoiceChat } from './RealtimeVoiceChat';
@@ -95,6 +97,8 @@ export const StudyEarnAssistant = () => {
     getUserContext 
   } = useAssistant();
   
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { speak, stop, isSpeaking } = useTextToSpeech();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -110,6 +114,18 @@ export const StudyEarnAssistant = () => {
   const lastSpokenIdRef = useRef<string | null>(null);
   const pendingConversationSend = useRef<string | null>(null);
   const { toast } = useToast();
+
+  // Handle FAB click - check auth first
+  const handleFabClick = () => {
+    if (!user) {
+      toast({
+        title: 'Login Required',
+        description: 'Please log in or sign up to use the AI assistant.',
+      });
+      return;
+    }
+    setIsOpen(true);
+  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -387,7 +403,7 @@ export const StudyEarnAssistant = () => {
     <>
       {/* FAB Button */}
       <motion.button
-        onClick={() => setIsOpen(true)}
+        onClick={handleFabClick}
         className={cn(
           "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300",
           "bg-gradient-to-br from-primary to-primary/80 hover:scale-110 hover:shadow-xl",
@@ -400,9 +416,6 @@ export const StudyEarnAssistant = () => {
         aria-label="Open StudyEarn Assistant"
       >
         <Brain className="h-7 w-7 text-primary-foreground" />
-        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-          AI
-        </span>
       </motion.button>
 
       {/* Chat Panel */}
