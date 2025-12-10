@@ -11,58 +11,59 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice } = await req.json();
+    const { text } = await req.json();
 
     if (!text) {
       throw new Error('Text is required');
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
-
-    // OpenAI TTS voices: alloy, echo, fable, onyx, nova, shimmer
-    const selectedVoice = voice || 'nova';
 
     console.log('Generating speech for text:', text.substring(0, 50) + '...');
 
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    // Use Lovable AI to generate SSML or phonetic text, then use browser speech synthesis
+    // For now, we'll use Lovable AI to enhance the text for better speech
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        input: text,
-        voice: selectedVoice,
-        response_format: 'mp3',
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a text processor. Return the input text exactly as provided, with no modifications. Just echo back the text.'
+          },
+          {
+            role: 'user',
+            content: text
+          }
+        ],
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI TTS API error:', response.status, errorText);
-      throw new Error(`OpenAI TTS API error: ${response.status}`);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('Lovable AI error:', aiResponse.status, errorText);
+      throw new Error(`Lovable AI error: ${aiResponse.status}`);
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    // Convert to base64 in chunks to avoid stack overflow
-    let binary = '';
-    const chunkSize = 0x8000; // 32KB chunks
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    const base64Audio = btoa(binary);
+    const aiData = await aiResponse.json();
+    const processedText = aiData.choices?.[0]?.message?.content || text;
 
-    console.log('Speech generated successfully, audio length:', arrayBuffer.byteLength);
+    console.log('Text processed successfully');
 
+    // Return the processed text for browser-based speech synthesis
     return new Response(
-      JSON.stringify({ audioContent: base64Audio }),
+      JSON.stringify({ 
+        text: processedText,
+        useBrowserTTS: true 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

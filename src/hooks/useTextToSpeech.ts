@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useTextToSpeech = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const speak = useCallback(async (text: string) => {
     if (!text || isSpeaking) return;
@@ -11,10 +11,9 @@ export const useTextToSpeech = () => {
     try {
       setIsSpeaking(true);
 
-      // Stop any currently playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+      // Stop any currently playing speech
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
       }
 
       // Clean text for TTS (remove emojis, markdown, etc.)
@@ -35,7 +34,7 @@ export const useTextToSpeech = () => {
         return;
       }
 
-      // Limit text length to avoid API limits
+      // Limit text length
       const truncatedText = cleanText.length > 2500 ? cleanText.substring(0, 2500) + '...' : cleanText;
 
       console.log('Calling text-to-speech edge function...');
@@ -50,29 +49,35 @@ export const useTextToSpeech = () => {
         throw error;
       }
 
-      if (data?.audioContent) {
-        const audioBlob = new Blob(
-          [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
-          { type: 'audio/mpeg' }
-        );
-        const audioUrl = URL.createObjectURL(audioBlob);
+      // Use browser's built-in speech synthesis
+      if (data?.useBrowserTTS && data?.text) {
+        const utterance = new SpeechSynthesisUtterance(data.text);
+        utteranceRef.current = utterance;
+
+        // Get available voices and select a good one
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(
+          (v) => v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Microsoft')
+        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
         
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
 
-        audio.onended = () => {
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        utterance.onend = () => {
           setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
+          utteranceRef.current = null;
         };
 
-        audio.onerror = () => {
+        utterance.onerror = () => {
           setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
+          utteranceRef.current = null;
         };
 
-        await audio.play();
+        window.speechSynthesis.speak(utterance);
       }
     } catch (error) {
       console.error('TTS error:', error);
@@ -81,10 +86,10 @@ export const useTextToSpeech = () => {
   }, [isSpeaking]);
 
   const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
     }
+    utteranceRef.current = null;
     setIsSpeaking(false);
   }, []);
 
