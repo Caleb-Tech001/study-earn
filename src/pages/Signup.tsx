@@ -238,7 +238,7 @@ const Signup = () => {
                 />
                 <label
                   htmlFor="terms"
-                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-xs leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   I agree to the{' '}
                   <Link to="/legal" className="text-primary hover:underline">
@@ -252,20 +252,22 @@ const Signup = () => {
               </div>
 
               {/* Submit */}
-              <Button
-                type="submit"
-                className="w-full gradient-primary text-lg shadow-primary"
-                size="lg"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
-              </Button>
-
-              <Link to="/phone-signup" state={{ role: selectedRole }}>
-                <Button type="button" variant="outline" className="w-full">
-                  Sign up with Phone
+              <div className="space-y-3">
+                <Button
+                  type="submit"
+                  className="w-full gradient-primary text-lg shadow-primary"
+                  size="lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
-              </Link>
+
+                <Link to="/phone-signup" state={{ role: selectedRole }}>
+                  <Button type="button" variant="outline" className="w-full">
+                    Sign up with Phone
+                  </Button>
+                </Link>
+              </div>
 
               <div className="text-center text-sm">
                 <span className="text-muted-foreground">Already have an account? </span>
