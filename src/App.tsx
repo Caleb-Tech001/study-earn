@@ -8,7 +8,9 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { CommunityProvider } from "@/contexts/CommunityContext";
 import { WalletProvider } from "@/contexts/WalletContext";
+import { AssistantProvider } from "@/contexts/AssistantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { StudyEarnAssistant } from "@/components/assistant/StudyEarnAssistant";
 
 // Public Pages
 import Index from "./pages/Index";
@@ -63,8 +65,10 @@ const App = () => (
           <NotificationProvider>
             <CartProvider>
               <WalletProvider>
-                <CommunityProvider>
-                  <Routes>
+                <AssistantProvider>
+                  <CommunityProvider>
+                    <StudyEarnAssistant />
+                    <Routes>
                   {/* Root & Public Routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/landing" element={<Landing />} />
@@ -192,8 +196,9 @@ const App = () => (
 
                     {/* Catch-all route */}
                     <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </CommunityProvider>
+                    </Routes>
+                  </CommunityProvider>
+                </AssistantProvider>
               </WalletProvider>
             </CartProvider>
           </NotificationProvider>
