@@ -162,22 +162,20 @@ const Login = () => {
               </div>
 
               {/* Submit */}
-              <div className="space-y-3">
-                <Button
-                  type="submit"
-                  className="w-full gradient-primary text-lg shadow-primary"
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </Button>
+              <Button
+                type="submit"
+                className="w-full gradient-primary text-lg shadow-primary"
+                size="lg"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
 
-                <Link to="/phone-login">
-                  <Button type="button" variant="outline" className="w-full">
-                    Sign in with Phone
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/phone-login" className="block mt-3">
+                <Button type="button" variant="outline" className="w-full">
+                  Sign in with Phone
+                </Button>
+              </Link>
 
               <div className="text-center text-sm">
                 <span className="text-muted-foreground">Don't have an account? </span>
