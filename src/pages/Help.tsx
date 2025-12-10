@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Search, MessageCircle, BookOpen, HelpCircle, Mail, Send, Copy, CheckCircle, Linkedin } from 'lucide-react';
+import { Search, MessageCircle, BookOpen, HelpCircle, Mail, Send, Copy, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Help = () => {
@@ -283,25 +283,6 @@ Please reference Ticket ID: ${newTicketId} in all future correspondence.
             <p className="mb-6 text-muted-foreground">
               Our support team is here to assist you with any questions or concerns
             </p>
-
-            {/* Contact Info */}
-            <div className="mb-8 space-y-3">
-              <div className="text-sm text-muted-foreground">Contact</div>
-              <div className="flex flex-col items-center gap-2">
-                <a 
-                  href="mailto:studyearnservices@gmail.com" 
-                  className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-                >
-                  <Mail className="h-4 w-4" />
-                  <span>Email</span>
-                </a>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Linkedin className="h-4 w-4" />
-                  <span>LinkedIn</span>
-                </div>
-              </div>
-            </div>
-
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               {/* Leave a Message Dialog */}
               <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
