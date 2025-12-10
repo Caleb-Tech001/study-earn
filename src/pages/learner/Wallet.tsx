@@ -350,7 +350,6 @@ const Wallet = () => {
         open={isWithdrawalOpen} 
         onClose={() => setIsWithdrawalOpen(false)}
         balance={balance}
-        nairaRate={dollarToNaira}
       />
     </DashboardLayout>
   );
