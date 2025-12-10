@@ -3,16 +3,38 @@ import { PublicLayout } from '@/layouts/PublicLayout';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Search, MessageCircle, BookOpen, HelpCircle, Mail } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Search, MessageCircle, BookOpen, HelpCircle, Mail, Send, Copy, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Help = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [ticketSubmitted, setTicketSubmitted] = useState(false);
+  const [ticketId, setTicketId] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [messageForm, setMessageForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+  const { toast } = useToast();
 
   const categories = [
     {
@@ -63,7 +85,110 @@ const Help = () => {
       answer:
         'Sign up with an Instructor role, complete the onboarding process including CV submission and sample lesson upload, and connect your payout account. After verification, you can start creating courses.',
     },
+    {
+      question: 'What are the minimum system requirements?',
+      answer:
+        'StudyEarn works on any modern web browser (Chrome, Firefox, Safari, Edge). For video lessons, we recommend a stable internet connection of at least 5 Mbps. Mobile apps are available for iOS and Android devices.',
+    },
+    {
+      question: 'How do I reset my password?',
+      answer:
+        'Click on "Forgot Password" on the login page and enter your registered email address. You\'ll receive a password reset link within a few minutes. If you don\'t see it, check your spam folder.',
+    },
+    {
+      question: 'Can I get a refund for purchased courses?',
+      answer:
+        'Yes, we offer a 7-day refund policy for purchased courses if you\'ve completed less than 30% of the content. Contact our support team with your order details to initiate a refund.',
+    },
+    {
+      question: 'How do referral bonuses work?',
+      answer:
+        'Share your unique referral code with friends. When they sign up and complete their first course, both you and your friend receive bonus points. There\'s no limit to how many people you can refer!',
+    },
+    {
+      question: 'Are certificates provided upon course completion?',
+      answer:
+        'Yes! Upon successfully completing a course and passing the final assessment, you\'ll receive a verifiable digital certificate that you can share on LinkedIn or download as a PDF.',
+    },
+    {
+      question: 'How do I report inappropriate content or users?',
+      answer:
+        'Click the "Report" button available on any content or user profile. Our moderation team reviews all reports within 24 hours and takes appropriate action to maintain a safe learning environment.',
+    },
+    {
+      question: 'Can I access courses offline?',
+      answer:
+        'Premium members can download course materials for offline access through our mobile app. Downloaded content remains available for 30 days before requiring an internet connection to refresh.',
+    },
+    {
+      question: 'What payment methods are accepted?',
+      answer:
+        'We accept all major credit/debit cards, PayPal, bank transfers, and mobile money (in supported regions). All transactions are secured with industry-standard encryption.',
+    },
+    {
+      question: 'How do I contact my instructor?',
+      answer:
+        'Each course has a Q&A section where you can post questions. For direct communication, some instructors enable private messaging. You can also participate in community discussions for peer support.',
+    },
   ];
+
+  const generateTicketId = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `SE-${timestamp}-${random}`;
+  };
+
+  const handleSubmitMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!messageForm.name || !messageForm.email || !messageForm.subject || !messageForm.message) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all fields before submitting.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newTicketId = generateTicketId();
+    setTicketId(newTicketId);
+
+    // Open mailto with the message details
+    const mailtoBody = `
+Ticket ID: ${newTicketId}
+---
+Name: ${messageForm.name}
+Email: ${messageForm.email}
+Subject: ${messageForm.subject}
+---
+Message:
+${messageForm.message}
+---
+Please reference Ticket ID: ${newTicketId} in all future correspondence.
+    `.trim();
+
+    const mailtoLink = `mailto:studyearnsupport@gmail.com?subject=[Ticket: ${newTicketId}] ${encodeURIComponent(messageForm.subject)}&body=${encodeURIComponent(mailtoBody)}`;
+    
+    window.open(mailtoLink, '_blank');
+    setTicketSubmitted(true);
+  };
+
+  const copyTicketId = () => {
+    navigator.clipboard.writeText(ticketId);
+    setCopied(true);
+    toast({
+      title: 'Copied!',
+      description: 'Ticket ID copied to clipboard.',
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const resetMessageForm = () => {
+    setMessageForm({ name: '', email: '', subject: '', message: '' });
+    setTicketSubmitted(false);
+    setTicketId('');
+    setIsMessageDialogOpen(false);
+  };
 
   return (
     <PublicLayout>
@@ -124,16 +249,23 @@ const Help = () => {
 
             <Card className="border-2 p-6">
               <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left font-semibold">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+                {faqs
+                  .filter(
+                    (faq) =>
+                      searchQuery === '' ||
+                      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`}>
+                      <AccordionTrigger className="text-left font-semibold">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
               </Accordion>
             </Card>
           </div>
@@ -152,13 +284,119 @@ const Help = () => {
               Our support team is here to assist you with any questions or concerns
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Button size="lg" className="gradient-primary shadow-primary">
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Start Live Chat
-              </Button>
-              <Button size="lg" variant="outline">
-                <Mail className="mr-2 h-5 w-5" />
-                Email Support
+              {/* Leave a Message Dialog */}
+              <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="gradient-primary shadow-primary">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Leave a Message
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  {!ticketSubmitted ? (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle className="font-display text-2xl">Leave a Message</DialogTitle>
+                        <DialogDescription>
+                          Fill out the form below and we'll get back to you as soon as possible. 
+                          You'll receive a ticket ID to track your request.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleSubmitMessage} className="mt-4 space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Full Name</Label>
+                          <Input
+                            id="name"
+                            placeholder="Enter your name"
+                            value={messageForm.name}
+                            onChange={(e) => setMessageForm({ ...messageForm, name: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email Address</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={messageForm.email}
+                            onChange={(e) => setMessageForm({ ...messageForm, email: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="subject">Subject</Label>
+                          <Input
+                            id="subject"
+                            placeholder="What is this about?"
+                            value={messageForm.subject}
+                            onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="message">Message</Label>
+                          <Textarea
+                            id="message"
+                            placeholder="Describe your issue or question in detail..."
+                            rows={4}
+                            value={messageForm.message}
+                            onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                          />
+                        </div>
+                        <Button type="submit" className="w-full gradient-primary">
+                          <Send className="mr-2 h-4 w-4" />
+                          Submit Message
+                        </Button>
+                      </form>
+                    </>
+                  ) : (
+                    <div className="py-6 text-center">
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                        <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                      </div>
+                      <DialogHeader>
+                        <DialogTitle className="font-display text-2xl">Message Submitted!</DialogTitle>
+                        <DialogDescription className="mt-2">
+                          Your message has been sent to our support team. Please save your ticket ID for reference.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="mt-6">
+                        <p className="mb-2 text-sm text-muted-foreground">Your Ticket ID:</p>
+                        <div className="flex items-center justify-center gap-2 rounded-lg bg-muted p-3">
+                          <code className="text-lg font-bold text-primary">{ticketId}</code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={copyTicketId}
+                            className="h-8 w-8 p-0"
+                          >
+                            {copied ? (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <p className="mt-4 text-sm text-muted-foreground">
+                          Use this ticket ID when contacting us for faster assistance.
+                        </p>
+                      </div>
+                      <Button onClick={resetMessageForm} className="mt-6 w-full" variant="outline">
+                        Close
+                      </Button>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              {/* Email Support Button */}
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+              >
+                <a href="mailto:studyearnsupport@gmail.com">
+                  <Mail className="mr-2 h-5 w-5" />
+                  Email Support
+                </a>
               </Button>
             </div>
           </Card>
