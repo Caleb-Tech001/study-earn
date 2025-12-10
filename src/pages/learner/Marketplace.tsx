@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ const Marketplace = () => {
   const [activeTab, setActiveTab] = useState('rewards');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [userListedProducts, setUserListedProducts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const rewards = [
     {
@@ -226,6 +227,35 @@ const Marketplace = () => {
 
   const allUserProducts = [...userListedProducts, ...userProducts];
 
+  // Filter functions for each tab
+  const filteredRewards = useMemo(() => {
+    if (!searchQuery) return rewards;
+    return rewards.filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const filteredDigitalProducts = useMemo(() => {
+    if (!searchQuery) return digitalProducts;
+    return digitalProducts.filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const filteredUserProducts = useMemo(() => {
+    if (!searchQuery) return allUserProducts;
+    return allUserProducts.filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.seller.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, allUserProducts]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -247,7 +277,12 @@ const Marketplace = () => {
           <div className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search products..." className="pl-10" />
+              <Input 
+                placeholder="Search products, rewards, or sellers..." 
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <Button onClick={() => setShowUploadModal(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -266,8 +301,13 @@ const Marketplace = () => {
 
           {/* Rewards Tab */}
           <TabsContent value="rewards" className="mt-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {rewards.map((reward) => (
+            {filteredRewards.length === 0 ? (
+              <Card className="border-2 p-8 text-center">
+                <p className="text-muted-foreground">No rewards found matching "{searchQuery}"</p>
+              </Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredRewards.map((reward) => (
                 <Card key={reward.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
                   <div className="mb-4 flex items-start justify-between">
                     <div className="rounded-xl bg-primary/10 p-3">
@@ -300,13 +340,19 @@ const Marketplace = () => {
                   </div>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Digital Products Tab */}
           <TabsContent value="digital" className="mt-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {digitalProducts.map((product) => (
+            {filteredDigitalProducts.length === 0 ? (
+              <Card className="border-2 p-8 text-center">
+                <p className="text-muted-foreground">No digital products found matching "{searchQuery}"</p>
+              </Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {filteredDigitalProducts.map((product) => (
                 <Card key={product.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
                   <div className="mb-4 flex items-start justify-between">
                     <div className="rounded-xl bg-accent/10 p-3">
@@ -339,7 +385,8 @@ const Marketplace = () => {
                   </div>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Community Market Tab */}
@@ -388,8 +435,13 @@ const Marketplace = () => {
             )}
 
             <h3 className="mb-4 font-display text-xl font-bold">Popular Products</h3>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {allUserProducts.filter(p => p.seller !== 'You').map((product) => (
+            {filteredUserProducts.filter(p => p.seller !== 'You').length === 0 ? (
+              <Card className="border-2 p-8 text-center">
+                <p className="text-muted-foreground">No community products found matching "{searchQuery}"</p>
+              </Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredUserProducts.filter(p => p.seller !== 'You').map((product) => (
                 <Card key={product.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
                   <div className="mb-4 flex items-start justify-between">
                     <div className="rounded-xl bg-secondary/10 p-3">
@@ -432,7 +484,8 @@ const Marketplace = () => {
                   </div>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

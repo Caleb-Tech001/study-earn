@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Search, BookOpen, Clock, Trophy, Filter, Star, CheckCircle, Loader2 } from 'lucide-react';
+import { Search, BookOpen, Clock, Trophy, Star, CheckCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const CATEGORIES = ['All', 'Coding', 'Digital Marketing', 'AI Basics', 'Graphic Design'];
 
 const Modules = () => {
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [enrolledModules, setEnrolledModules] = useState<string[]>(['1', '2', '3']);
 
@@ -129,6 +133,20 @@ const Modules = () => {
     },
   ];
 
+  // Filter modules based on search and category
+  const filteredModules = useMemo(() => {
+    return modules.filter((module) => {
+      const matchesSearch = searchQuery === '' || 
+        module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        module.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        module.partner.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesCategory = selectedCategory === 'All' || module.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, selectedCategory]);
+
   const handleEnroll = async (moduleId: string, moduleTitle: string) => {
     setEnrollingId(moduleId);
     
@@ -161,25 +179,29 @@ const Modules = () => {
 
         {/* Search and Filter */}
         <Card className="border-2 p-4">
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search modules..." className="pl-10" />
-            </div>
-            <Button variant="outline" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search modules by title, instructor, or partner..." 
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </Card>
 
         {/* Category Pills */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="default" className="cursor-pointer">All</Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">Coding</Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">Digital Marketing</Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">AI Basics</Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">Graphic Design</Badge>
+          {CATEGORIES.map((category) => (
+            <Badge 
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"} 
+              className="cursor-pointer hover:bg-muted transition-colors"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </Badge>
+          ))}
         </div>
 
         {/* Stats Overview */}
@@ -222,8 +244,20 @@ const Modules = () => {
         </div>
 
         {/* Modules Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {modules.map((module) => (
+        {filteredModules.length === 0 ? (
+          <Card className="border-2 p-8 text-center">
+            <p className="text-muted-foreground">No modules found matching your criteria.</p>
+            <Button 
+              variant="link" 
+              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              className="mt-2"
+            >
+              Clear filters
+            </Button>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {filteredModules.map((module) => (
             <Card key={module.id} className="overflow-hidden border-2 transition-smooth hover:shadow-lg">
               <div className="relative h-48 overflow-hidden bg-muted">
                 <img
@@ -321,7 +355,8 @@ const Modules = () => {
               </div>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
