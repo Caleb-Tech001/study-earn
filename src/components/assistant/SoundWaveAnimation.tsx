@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface SoundWaveAnimationProps {
@@ -8,7 +7,7 @@ interface SoundWaveAnimationProps {
 }
 
 export const SoundWaveAnimation = ({ isActive, variant = 'listening', className }: SoundWaveAnimationProps) => {
-  const barCount = 5;
+  const barCount = 4;
   
   const getColor = () => {
     switch (variant) {
@@ -23,26 +22,19 @@ export const SoundWaveAnimation = ({ isActive, variant = 'listening', className 
     }
   };
 
-  const getAnimationDelay = (index: number) => {
-    return index * 0.1;
-  };
-
   return (
-    <div className={cn("flex items-center justify-center gap-0.5", className)}>
+    <div className={cn("flex items-center justify-center gap-0.5 h-4", className)}>
       {Array.from({ length: barCount }).map((_, index) => (
-        <motion.div
+        <div
           key={index}
-          className={cn("w-0.5 rounded-full", getColor())}
-          initial={{ height: 4 }}
-          animate={isActive ? {
-            height: [4, 12 + Math.random() * 8, 6, 16 + Math.random() * 4, 4],
-          } : { height: 4 }}
-          transition={{
-            duration: 0.8,
-            repeat: isActive ? Infinity : 0,
-            repeatType: "loop",
-            delay: getAnimationDelay(index),
-            ease: "easeInOut",
+          className={cn(
+            "w-0.5 rounded-full transition-all duration-300",
+            getColor(),
+            isActive ? "animate-pulse" : "h-1"
+          )}
+          style={{
+            height: isActive ? `${8 + (index % 2) * 4}px` : '4px',
+            animationDelay: `${index * 0.15}s`
           }}
         />
       ))}
