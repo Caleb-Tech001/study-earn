@@ -85,7 +85,15 @@ export const PublicLayout = ({ children, showNav = true }: PublicLayoutProps) =>
 
               <div>
                 <h3 className="mb-4 font-semibold">Contact</h3>
-                <p className="text-sm text-muted-foreground">support@studyearn.com</p>
+                <div className="space-y-2">
+                  <a 
+                    href="mailto:studyearnservices@gmail.com" 
+                    className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Email
+                  </a>
+                  <p className="text-sm text-muted-foreground">LinkedIn</p>
+                </div>
               </div>
             </div>
 
