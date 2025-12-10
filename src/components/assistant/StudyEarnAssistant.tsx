@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
   X, 
@@ -15,7 +15,10 @@ import {
   Target,
   Loader2,
   Volume2,
-  VolumeX
+  VolumeX,
+  MessageSquare,
+  Phone,
+  PhoneOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -95,11 +98,15 @@ export const StudyEarnAssistant = () => {
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [conversationMode, setConversationMode] = useState(false);
+  const [isListeningInConversation, setIsListeningInConversation] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
+  const conversationRecognitionRef = useRef<ISpeechRecognition | null>(null);
   const lastSpokenIdRef = useRef<string | null>(null);
+  const pendingConversationSend = useRef<string | null>(null);
   const { toast } = useToast();
 
   // Auto-scroll to bottom
@@ -109,7 +116,7 @@ export const StudyEarnAssistant = () => {
     }
   }, [messages, isLoading]);
 
-  // Auto-speak new assistant messages
+  // Auto-speak new assistant messages and restart listening in conversation mode
   useEffect(() => {
     if (!voiceEnabled || messages.length === 0) return;
     
@@ -124,6 +131,122 @@ export const StudyEarnAssistant = () => {
       speak(lastMessage.content);
     }
   }, [messages, voiceEnabled, speak, isLoading]);
+
+  // Start listening when TTS finishes in conversation mode
+  useEffect(() => {
+    if (conversationMode && !isSpeaking && !isLoading && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant' && lastMessage.content) {
+        // Small delay before starting to listen again
+        const timer = setTimeout(() => {
+          if (conversationMode && !isSpeaking && !isLoading) {
+            startConversationListening();
+          }
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isSpeaking, conversationMode, isLoading, messages]);
+
+  // Initialize conversation mode speech recognition
+  const startConversationListening = useCallback(() => {
+    if (!conversationRecognitionRef.current || !conversationMode) return;
+    
+    try {
+      setIsListeningInConversation(true);
+      conversationRecognitionRef.current.start();
+    } catch (error) {
+      console.error('Error starting conversation listening:', error);
+    }
+  }, [conversationMode]);
+
+  const stopConversationListening = useCallback(() => {
+    if (conversationRecognitionRef.current) {
+      try {
+        conversationRecognitionRef.current.stop();
+      } catch (error) {
+        // Ignore errors when stopping
+      }
+    }
+    setIsListeningInConversation(false);
+  }, []);
+
+  // Setup conversation mode recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      conversationRecognitionRef.current = new SpeechRecognition();
+      conversationRecognitionRef.current.continuous = false;
+      conversationRecognitionRef.current.interimResults = false;
+      conversationRecognitionRef.current.lang = 'en-US';
+
+      conversationRecognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript.trim()) {
+          pendingConversationSend.current = transcript;
+        }
+      };
+
+      conversationRecognitionRef.current.onerror = (event) => {
+        console.error('Conversation recognition error:', event.error);
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          setIsListeningInConversation(false);
+        }
+      };
+
+      conversationRecognitionRef.current.onend = () => {
+        setIsListeningInConversation(false);
+        // Send the message if we have one
+        if (pendingConversationSend.current && conversationMode) {
+          const message = pendingConversationSend.current;
+          pendingConversationSend.current = null;
+          sendMessage(message);
+        }
+      };
+    }
+
+    return () => {
+      if (conversationRecognitionRef.current) {
+        try {
+          conversationRecognitionRef.current.stop();
+        } catch (error) {
+          // Ignore
+        }
+      }
+    };
+  }, [conversationMode, sendMessage]);
+
+  // Toggle conversation mode
+  const toggleConversationMode = useCallback(() => {
+    if (conversationMode) {
+      // Turn off
+      setConversationMode(false);
+      stopConversationListening();
+      stop();
+      toast({
+        title: 'Conversation Mode Off',
+        description: 'Voice conversation ended',
+      });
+    } else {
+      // Turn on
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        toast({
+          title: 'Not Supported',
+          description: 'Voice recognition is not supported in your browser.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setConversationMode(true);
+      setVoiceEnabled(true);
+      toast({
+        title: 'Conversation Mode On',
+        description: 'Speak naturally - I\'ll listen and respond!',
+      });
+      // Start listening immediately
+      setTimeout(() => startConversationListening(), 300);
+    }
+  }, [conversationMode, stopConversationListening, stop, toast, startConversationListening]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -305,6 +428,23 @@ export const StudyEarnAssistant = () => {
               </div>
               <div className="flex items-center gap-1">
                 <Button
+                  variant={conversationMode ? "default" : "ghost"}
+                  size="icon"
+                  onClick={toggleConversationMode}
+                  className={cn(
+                    "h-8 w-8",
+                    conversationMode && "bg-green-500 hover:bg-green-600 text-white",
+                    isListeningInConversation && "animate-pulse"
+                  )}
+                  title={conversationMode ? "End voice conversation" : "Start voice conversation"}
+                >
+                  {conversationMode ? (
+                    <PhoneOff className="h-4 w-4" />
+                  ) : (
+                    <Phone className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
                   variant="ghost"
                   size="icon"
                   onClick={toggleVoice}
@@ -341,6 +481,23 @@ export const StudyEarnAssistant = () => {
             </div>
 
             {/* Messages */}
+            {/* Conversation Mode Indicator */}
+            {conversationMode && (
+              <div className="flex items-center justify-center gap-2 border-b border-border bg-green-500/10 px-4 py-2">
+                <div className={cn(
+                  "h-2 w-2 rounded-full",
+                  isListeningInConversation ? "bg-green-500 animate-pulse" : 
+                  isSpeaking ? "bg-blue-500 animate-pulse" :
+                  isLoading ? "bg-yellow-500 animate-pulse" : "bg-green-500"
+                )} />
+                <span className="text-xs font-medium text-foreground">
+                  {isListeningInConversation ? "Listening..." : 
+                   isSpeaking ? "Speaking..." : 
+                   isLoading ? "Thinking..." : "Voice conversation active"}
+                </span>
+              </div>
+            )}
+
             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -353,6 +510,15 @@ export const StudyEarnAssistant = () => {
                   <p className="mb-6 text-sm text-muted-foreground">
                     I'm your StudyEarn companion. How can I help you learn and earn today?
                   </p>
+
+                  {/* Voice Conversation CTA */}
+                  <button
+                    onClick={toggleConversationMode}
+                    className="mb-4 flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-green-600 hover:scale-105"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Start Voice Conversation
+                  </button>
                   
                   {/* Quick Actions */}
                   <div className="grid w-full grid-cols-2 gap-2">
