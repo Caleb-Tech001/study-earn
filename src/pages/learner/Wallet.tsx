@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { WithdrawalModal } from '@/components/wallet/WithdrawalModal';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import {
   Wallet as WalletIcon,
   TrendingUp,
@@ -18,6 +19,7 @@ import {
   Bitcoin,
   Coins,
   RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -25,6 +27,7 @@ import autoTable from 'jspdf-autotable';
 const Wallet = () => {
   const { toast } = useToast();
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
+  const { rate: dollarToNaira, lastUpdated, isLoading, change24h, refresh } = useExchangeRate();
   
   const balance = 245.5;
   const pointsBalance = 24550;
@@ -34,7 +37,6 @@ const Wallet = () => {
 
   // Exchange rates
   const pointsToDollar = 1000; // 1000 points = $1
-  const dollarToNaira = 1600; // $1 = ₦1600 (static rate)
   
   const nairaBalance = balance * dollarToNaira;
 
@@ -255,9 +257,36 @@ const Wallet = () => {
                 <Coins className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
-              <RefreshCw className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Exchange Rate: $1 = ₦{dollarToNaira.toLocaleString()}</span>
+            <div className="flex items-center justify-between rounded-lg bg-muted p-3">
+              <div className="flex items-center gap-2">
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                )}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">$1 = ₦{dollarToNaira.toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground">
+                    Updated: {lastUpdated.toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {change24h !== 0 && (
+                  <span className={`text-xs font-medium ${change24h > 0 ? 'text-destructive' : 'text-success'}`}>
+                    {change24h > 0 ? '+' : ''}{change24h.toFixed(0)}
+                  </span>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7"
+                  onClick={refresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
