@@ -1,1 +1,16 @@
 project_id = "afszuxqcpylimotabbwh"
+
+[functions.studyearn-assistant]
+verify_jwt = false
+
+[functions.text-to-speech]
+verify_jwt = false
+
+[functions.send-otp]
+verify_jwt = false
+
+[functions.verify-otp]
+verify_jwt = false
+
+[functions.check-trusted-device]
+verify_jwt = false

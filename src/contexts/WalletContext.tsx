@@ -17,7 +17,7 @@ const POINTS_TO_DOLLAR = 1000; // 1000 points = $1
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [balance, setBalance] = useState(245.5);
-  const [pointsBalance, setPointsBalance] = useState(24550);
+  const [pointsBalance, setPointsBalance] = useState(5000);
   const { toast } = useToast();
 
   const addBalance = useCallback((amount: number) => {
