@@ -252,22 +252,20 @@ const Signup = () => {
               </div>
 
               {/* Submit */}
-              <div className="space-y-3">
-                <Button
-                  type="submit"
-                  className="w-full gradient-primary text-lg shadow-primary"
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </Button>
+              <Button
+                type="submit"
+                className="w-full gradient-primary text-lg shadow-primary"
+                size="lg"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </Button>
 
-                <Link to="/phone-signup" state={{ role: selectedRole }}>
-                  <Button type="button" variant="outline" className="w-full">
-                    Sign up with Phone
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/phone-signup" state={{ role: selectedRole }} className="block mt-3">
+                <Button type="button" variant="outline" className="w-full">
+                  Sign up with Phone
+                </Button>
+              </Link>
 
               <div className="text-center text-sm">
                 <span className="text-muted-foreground">Already have an account? </span>
