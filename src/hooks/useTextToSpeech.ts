@@ -38,11 +38,15 @@ export const useTextToSpeech = () => {
       // Limit text length to avoid API limits
       const truncatedText = cleanText.length > 2500 ? cleanText.substring(0, 2500) + '...' : cleanText;
 
+      console.log('Calling text-to-speech edge function...');
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { text: truncatedText },
       });
 
+      console.log('TTS response:', { data, error });
+
       if (error) {
+        console.error('TTS edge function error:', error);
         throw error;
       }
 
