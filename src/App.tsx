@@ -129,7 +129,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            
+            <Route
+              path="/learner/community"
+              element={
+                <ProtectedRoute allowedRoles={['learner']}>
+                  <Community />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/learner/profile"
               element={

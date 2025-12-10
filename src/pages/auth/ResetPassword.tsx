@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Lock, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -64,6 +64,15 @@ const ResetPassword = () => {
     <PublicLayout showNav={false}>
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-4 py-12">
         <div className="w-full max-w-md animate-fade-in">
+          {/* Back button */}
+          <Link 
+            to="/login" 
+            className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-smooth"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Sign In
+          </Link>
+
           {/* Header */}
           <div className="mb-8 text-center">
             <div className="mb-6 flex justify-center">

@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { WithdrawalModal } from '@/components/wallet/WithdrawalModal';
 import {
   Wallet as WalletIcon,
   TrendingUp,
@@ -13,23 +15,28 @@ import {
   Gift,
   Trophy,
   FileDown,
+  Bitcoin,
+  Coins,
+  RefreshCw,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const Wallet = () => {
   const { toast } = useToast();
+  const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
+  
   const balance = 245.5;
+  const pointsBalance = 24550;
   const totalEarned = 1250.0;
   const totalWithdrawn = 800.0;
   const totalRedeemed = 204.5;
 
-  const handleWithdraw = () => {
-    toast({
-      title: "Withdrawal Initiated",
-      description: "Your withdrawal request is being processed. Funds will be transferred within 2-3 business days.",
-    });
-  };
+  // Exchange rates
+  const pointsToDollar = 1000; // 1000 points = $1
+  const dollarToNaira = 1600; // $1 = ₦1600 (static rate)
+  
+  const nairaBalance = balance * dollarToNaira;
 
   const handleRedeem = () => {
     toast({
@@ -44,6 +51,7 @@ const Wallet = () => {
       type: 'earn',
       description: 'Completed Python Basics Quiz',
       amount: 15.0,
+      points: 15000,
       status: 'completed',
       date: '2025-01-15T10:30:00',
     },
@@ -52,6 +60,7 @@ const Wallet = () => {
       type: 'earn',
       description: 'Completed JavaScript Advanced Module',
       amount: 35.0,
+      points: 35000,
       status: 'completed',
       date: '2024-12-28T14:20:00',
     },
@@ -60,6 +69,7 @@ const Wallet = () => {
       type: 'redeem',
       description: 'Amazon Gift Card - $50',
       amount: -50.0,
+      points: -50000,
       status: 'completed',
       date: '2024-12-20T15:20:00',
     },
@@ -68,14 +78,16 @@ const Wallet = () => {
       type: 'earn',
       description: '7-Day Streak Bonus',
       amount: 25.0,
+      points: 25000,
       status: 'completed',
       date: '2024-12-14T00:00:00',
     },
     {
       id: '5',
       type: 'withdraw',
-      description: 'Bank Transfer',
+      description: 'Bank Transfer - OPay',
       amount: -100.0,
+      points: -100000,
       status: 'pending',
       date: '2024-11-25T14:15:00',
     },
@@ -84,6 +96,7 @@ const Wallet = () => {
       type: 'earn',
       description: 'Completed Web Dev Module 3',
       amount: 40.0,
+      points: 40000,
       status: 'completed',
       date: '2024-11-18T18:45:00',
     },
@@ -92,22 +105,25 @@ const Wallet = () => {
       type: 'referral',
       description: 'Referral Bonus - Sarah J.',
       amount: 20.0,
+      points: 20000,
       status: 'completed',
       date: '2024-10-30T09:30:00',
     },
     {
       id: '8',
-      type: 'earn',
-      description: 'Completed React Fundamentals',
-      amount: 45.0,
+      type: 'withdraw',
+      description: 'Crypto - USDT (TRC20)',
+      amount: -50.0,
+      points: -50000,
       status: 'completed',
       date: '2024-10-15T16:00:00',
     },
     {
       id: '9',
-      type: 'redeem',
-      description: 'Course Discount Voucher',
-      amount: -25.0,
+      type: 'conversion',
+      description: 'Points Conversion',
+      amount: 25.0,
+      points: 25000,
       status: 'completed',
       date: '2024-09-28T11:45:00',
     },
@@ -116,64 +132,22 @@ const Wallet = () => {
       type: 'earn',
       description: 'Monthly Achievement Bonus',
       amount: 50.0,
+      points: 50000,
       status: 'completed',
       date: '2024-09-01T00:00:00',
-    },
-    {
-      id: '11',
-      type: 'withdraw',
-      description: 'PayPal Transfer',
-      amount: -150.0,
-      status: 'completed',
-      date: '2024-08-22T10:30:00',
-    },
-    {
-      id: '12',
-      type: 'earn',
-      description: 'Completed TypeScript Course',
-      amount: 55.0,
-      status: 'completed',
-      date: '2024-08-10T13:20:00',
-    },
-    {
-      id: '13',
-      type: 'referral',
-      description: 'Referral Bonus - Mike R.',
-      amount: 20.0,
-      status: 'completed',
-      date: '2024-07-25T08:15:00',
-    },
-    {
-      id: '14',
-      type: 'earn',
-      description: 'Completed Node.js Backend Course',
-      amount: 60.0,
-      status: 'completed',
-      date: '2024-07-05T17:30:00',
-    },
-    {
-      id: '15',
-      type: 'redeem',
-      description: 'Premium Course Access',
-      amount: -80.0,
-      status: 'completed',
-      date: '2024-06-18T14:00:00',
     },
   ];
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
     
-    // Title
     doc.setFontSize(20);
     doc.text('Transaction History', 14, 20);
     
-    // Account info
     doc.setFontSize(10);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
-    doc.text(`Balance: $${balance.toFixed(2)}`, 14, 36);
+    doc.text(`Balance: $${balance.toFixed(2)} (₦${nairaBalance.toLocaleString()})`, 14, 36);
     
-    // Table
     autoTable(doc, {
       startY: 45,
       head: [['Date', 'Description', 'Type', 'Amount', 'Status']],
@@ -210,6 +184,8 @@ const Wallet = () => {
         return <ShoppingBag className="h-5 w-5 text-accent" />;
       case 'referral':
         return <Gift className="h-5 w-5 text-secondary" />;
+      case 'conversion':
+        return <RefreshCw className="h-5 w-5 text-primary" />;
       default:
         return <WalletIcon className="h-5 w-5 text-muted-foreground" />;
     }
@@ -237,33 +213,57 @@ const Wallet = () => {
           </p>
         </div>
 
-        {/* Balance Card */}
-        <Card className="border-2 bg-gradient-to-br from-primary to-secondary p-8 text-white">
-          <div className="mb-6">
-            <p className="mb-2 text-sm opacity-90">Available Balance</p>
-            <p className="font-display text-6xl font-bold">${balance.toFixed(2)}</p>
-          </div>
+        {/* Balance Cards */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Main Balance Card */}
+          <Card className="border-2 bg-gradient-to-br from-primary to-secondary p-6 text-white">
+            <div className="mb-4">
+              <p className="mb-1 text-sm opacity-90">Available Balance</p>
+              <p className="font-display text-5xl font-bold">${balance.toFixed(2)}</p>
+              <p className="mt-1 text-sm opacity-80">≈ ₦{nairaBalance.toLocaleString()}</p>
+            </div>
 
-          <div className="flex gap-4">
-            <Button 
-              onClick={handleWithdraw}
-              className="flex-1 bg-white text-primary hover:bg-white/90"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Withdraw
-            </Button>
-            <Button 
-              onClick={handleRedeem}
-              className="flex-1 bg-white/20 text-white border border-white/30 hover:bg-white/30"
-            >
-              <ShoppingBag className="mr-2 h-4 w-4" />
-              Redeem
-            </Button>
-          </div>
-        </Card>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setIsWithdrawalOpen(true)}
+                className="flex-1 bg-white text-primary hover:bg-white/90"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Withdraw
+              </Button>
+              <Button 
+                onClick={handleRedeem}
+                className="flex-1 bg-white/20 text-white border border-white/30 hover:bg-white/30"
+              >
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Redeem
+              </Button>
+            </div>
+          </Card>
+
+          {/* Points Card */}
+          <Card className="border-2 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Points Balance</p>
+                <p className="font-display text-4xl font-bold text-primary">{pointsBalance.toLocaleString()}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {pointsToDollar.toLocaleString()} points = $1
+                </p>
+              </div>
+              <div className="rounded-xl bg-primary/10 p-4">
+                <Coins className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+              <RefreshCw className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Exchange Rate: $1 = ₦{dollarToNaira.toLocaleString()}</span>
+            </div>
+          </Card>
+        </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card className="border-2 p-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Total Earned</p>
@@ -308,7 +308,7 @@ const Wallet = () => {
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {transactions.map((transaction) => (
               <div
                 key={transaction.id}
@@ -344,6 +344,14 @@ const Wallet = () => {
           </div>
         </Card>
       </div>
+
+      {/* Withdrawal Modal */}
+      <WithdrawalModal 
+        open={isWithdrawalOpen} 
+        onClose={() => setIsWithdrawalOpen(false)}
+        balance={balance}
+        nairaRate={dollarToNaira}
+      />
     </DashboardLayout>
   );
 };

@@ -2,6 +2,10 @@ import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { SkillToEarnTiles } from '@/components/dashboard/SkillToEarnTiles';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { ProgressOverview } from '@/components/dashboard/ProgressOverview';
+import { CrosswordGame } from '@/components/games/CrosswordGame';
 import {
   Wallet,
   TrendingUp,
@@ -11,10 +15,14 @@ import {
   Flame,
   CheckCircle2,
   ArrowRight,
+  Gamepad2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const LearnerDashboard = () => {
+  const [showGame, setShowGame] = useState(false);
+  
   // Mock data - would come from API
   const stats = {
     balance: 245.5,
@@ -62,13 +70,6 @@ const LearnerDashboard = () => {
       nextLesson: 'CSS Flexbox and Grid',
       reward: 40,
     },
-    {
-      id: '3',
-      title: 'Data Science Basics',
-      progress: 15,
-      nextLesson: 'Introduction to Pandas',
-      reward: 60,
-    },
   ];
 
   const leaderboard = [
@@ -90,84 +91,114 @@ const LearnerDashboard = () => {
           </p>
         </div>
 
+        {/* Progress Overview */}
+        <ProgressOverview />
+
         {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-2 p-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-2 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="mt-2 font-display text-3xl font-bold">${stats.balance}</p>
+                <p className="mt-1 font-display text-2xl font-bold">${stats.balance}</p>
               </div>
               <div className="rounded-xl bg-primary/10 p-3">
-                <Wallet className="h-6 w-6 text-primary" />
+                <Wallet className="h-5 w-5 text-primary" />
               </div>
             </div>
             <Link to="/learner/wallet">
-              <Button variant="link" className="mt-4 h-auto p-0 text-primary">
+              <Button variant="link" className="mt-2 h-auto p-0 text-primary">
                 View Wallet <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
           </Card>
 
-          <Card className="border-2 p-6">
+          <Card className="border-2 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Current Streak</p>
-                <p className="mt-2 font-display text-3xl font-bold">{stats.streak} days</p>
+                <p className="mt-1 font-display text-2xl font-bold">{stats.streak} days</p>
               </div>
               <div className="rounded-xl bg-accent/10 p-3">
-                <Flame className="h-6 w-6 text-accent" />
+                <Flame className="h-5 w-5 text-accent" />
               </div>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">Keep it up!</p>
+            <p className="mt-2 text-sm text-muted-foreground">Keep it up!</p>
           </Card>
 
-          <Card className="border-2 p-6">
+          <Card className="border-2 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Modules Completed</p>
-                <p className="mt-2 font-display text-3xl font-bold">{stats.completedModules}</p>
+                <p className="mt-1 font-display text-2xl font-bold">{stats.completedModules}</p>
               </div>
               <div className="rounded-xl bg-success/10 p-3">
-                <CheckCircle2 className="h-6 w-6 text-success" />
+                <CheckCircle2 className="h-5 w-5 text-success" />
               </div>
             </div>
             <Link to="/learner/modules">
-              <Button variant="link" className="mt-4 h-auto p-0 text-primary">
+              <Button variant="link" className="mt-2 h-auto p-0 text-primary">
                 View All <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
           </Card>
 
-          <Card className="border-2 p-6">
+          <Card className="border-2 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">In Progress</p>
-                <p className="mt-2 font-display text-3xl font-bold">{stats.inProgressModules}</p>
+                <p className="mt-1 font-display text-2xl font-bold">{stats.inProgressModules}</p>
               </div>
               <div className="rounded-xl bg-secondary/10 p-3">
-                <BookOpen className="h-6 w-6 text-secondary" />
+                <BookOpen className="h-5 w-5 text-secondary" />
               </div>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">Continue learning!</p>
+            <p className="mt-2 text-sm text-muted-foreground">Continue learning!</p>
           </Card>
         </div>
+
+        {/* Skill-to-Earn Tiles */}
+        <SkillToEarnTiles />
+
+        {/* Quick Actions */}
+        <QuickActions onPlayGame={() => setShowGame(true)} />
+
+        {/* Game Section */}
+        {showGame && (
+          <Card className="border-2 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-accent/10 p-3">
+                  <Gamepad2 className="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <h2 className="font-display text-2xl font-bold">Crossword Puzzle</h2>
+                  <p className="text-sm text-muted-foreground">Complete the puzzle to earn points!</p>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => setShowGame(false)}>
+                Close Game
+              </Button>
+            </div>
+            <CrosswordGame />
+          </Card>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* In Progress Modules */}
           <Card className="border-2 p-6 lg:col-span-2">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-display text-2xl font-bold">Continue Learning</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold">Continue Learning</h2>
               <Link to="/learner/modules">
-                <Button variant="ghost">View All</Button>
+                <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {inProgressModules.map((module) => (
                 <Card key={module.id} className="p-4 transition-smooth hover:shadow-md">
-                  <div className="mb-3 flex items-start justify-between">
+                  <div className="mb-2 flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold">{module.title}</h3>
                       <p className="text-sm text-muted-foreground">{module.nextLesson}</p>
@@ -195,12 +226,12 @@ const LearnerDashboard = () => {
           <div className="space-y-6">
             {/* Recent Activity */}
             <Card className="border-2 p-6">
-              <h3 className="mb-4 font-display text-xl font-bold">Recent Activity</h3>
-              <div className="space-y-4">
+              <h3 className="mb-4 font-display text-lg font-bold">Recent Activity</h3>
+              <div className="space-y-3">
                 {recentActivity.map((activity, index) => (
                   <div key={index} className="flex gap-3">
                     <div className={`rounded-lg bg-muted p-2 ${activity.color}`}>
-                      <activity.icon className="h-5 w-5" />
+                      <activity.icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{activity.title}</p>
@@ -219,10 +250,10 @@ const LearnerDashboard = () => {
             {/* Mini Leaderboard */}
             <Card className="border-2 p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-display text-xl font-bold">Leaderboard</h3>
+                <h3 className="font-display text-lg font-bold">Leaderboard</h3>
                 <Trophy className="h-5 w-5 text-accent" />
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {leaderboard.map((entry) => (
                   <div
                     key={entry.rank}
@@ -230,7 +261,7 @@ const LearnerDashboard = () => {
                       entry.isCurrentUser ? 'bg-primary/10' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div
                         className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                           entry.rank === 1
@@ -240,7 +271,7 @@ const LearnerDashboard = () => {
                       >
                         {entry.rank}
                       </div>
-                      <span className={entry.isCurrentUser ? 'font-semibold' : ''}>
+                      <span className={`text-sm ${entry.isCurrentUser ? 'font-semibold' : ''}`}>
                         {entry.name}
                       </span>
                     </div>
@@ -248,8 +279,8 @@ const LearnerDashboard = () => {
                   </div>
                 ))}
               </div>
-              <Link to="/learner/leaderboard">
-                <Button variant="outline" className="mt-4 w-full">
+              <Link to="/learner/community">
+                <Button variant="outline" className="mt-4 w-full" size="sm">
                   View Full Leaderboard
                 </Button>
               </Link>
