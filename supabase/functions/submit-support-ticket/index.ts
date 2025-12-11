@@ -68,47 +68,55 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send email notification to support team
-    const supportEmailResult = await resend.emails.send({
-      from: "StudyEarn Support <onboarding@resend.dev>",
-      to: ["studyearnservices@gmail.com"],
-      subject: `[Ticket: ${ticketId}] ${subject}`,
-      html: `
-        <h2>New Support Ticket</h2>
-        <p><strong>Ticket ID:</strong> ${ticketId}</p>
-        <p><strong>From:</strong> ${name} (${email})</p>
-        <p><strong>Subject:</strong> ${subject}</p>
-        <hr />
-        <h3>Message:</h3>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-        <hr />
-        <p><em>Reply to this email or contact the user at ${email}</em></p>
-      `,
-    });
-
-    console.log("Support email sent:", supportEmailResult);
+    try {
+      const supportEmailResult = await resend.emails.send({
+        from: "StudyEarn Support <onboarding@resend.dev>",
+        to: ["studyearnservices@gmail.com"],
+        subject: `[Ticket: ${ticketId}] ${subject}`,
+        html: `
+          <h2>New Support Ticket</h2>
+          <p><strong>Ticket ID:</strong> ${ticketId}</p>
+          <p><strong>From:</strong> ${name} (${email})</p>
+          <p><strong>Subject:</strong> ${subject}</p>
+          <hr />
+          <h3>Message:</h3>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+          <hr />
+          <p><em>Reply to this email or contact the user at ${email}</em></p>
+        `,
+      });
+      console.log("Support email result:", JSON.stringify(supportEmailResult));
+    } catch (emailError: any) {
+      console.error("Failed to send support team email:", emailError?.message || emailError);
+      // Continue - don't fail the request if email fails
+    }
 
     // Send confirmation email to user
-    const userEmailResult = await resend.emails.send({
-      from: "StudyEarn Support <onboarding@resend.dev>",
-      to: [email],
-      subject: `Your StudyEarn Support Ticket: ${ticketId}`,
-      html: `
-        <h2>Thank you for contacting StudyEarn Support!</h2>
-        <p>Hi ${name},</p>
-        <p>We have received your support request and created a ticket for you.</p>
-        <p><strong>Your Ticket ID:</strong> <code style="background: #f4f4f4; padding: 4px 8px; border-radius: 4px; font-size: 16px;">${ticketId}</code></p>
-        <p>Please save this Ticket ID for future reference. You can use it to check the status of your request on our Help page.</p>
-        <hr />
-        <h3>Your Message:</h3>
-        <p><strong>Subject:</strong> ${subject}</p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-        <hr />
-        <p>Our team will review your request and get back to you as soon as possible.</p>
-        <p>Best regards,<br>The StudyEarn Team</p>
-      `,
-    });
-
-    console.log("User confirmation email sent:", userEmailResult);
+    try {
+      const userEmailResult = await resend.emails.send({
+        from: "StudyEarn Support <onboarding@resend.dev>",
+        to: [email],
+        subject: `Your StudyEarn Support Ticket: ${ticketId}`,
+        html: `
+          <h2>Thank you for contacting StudyEarn Support!</h2>
+          <p>Hi ${name},</p>
+          <p>We have received your support request and created a ticket for you.</p>
+          <p><strong>Your Ticket ID:</strong> <code style="background: #f4f4f4; padding: 4px 8px; border-radius: 4px; font-size: 16px;">${ticketId}</code></p>
+          <p>Please save this Ticket ID for future reference. You can use it to check the status of your request on our Help page.</p>
+          <hr />
+          <h3>Your Message:</h3>
+          <p><strong>Subject:</strong> ${subject}</p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+          <hr />
+          <p>Our team will review your request and get back to you as soon as possible.</p>
+          <p>Best regards,<br>The StudyEarn Team</p>
+        `,
+      });
+      console.log("User confirmation email result:", JSON.stringify(userEmailResult));
+    } catch (emailError: any) {
+      console.error("Failed to send user confirmation email:", emailError?.message || emailError);
+      // Continue - don't fail the request if email fails
+    }
 
     return new Response(
       JSON.stringify({ 

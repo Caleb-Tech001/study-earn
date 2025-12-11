@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { 
   X, 
   Send, 
@@ -16,9 +15,7 @@ import {
   Target,
   Loader2,
   Volume2,
-  VolumeX,
   Phone,
-  PhoneOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,21 +95,15 @@ export const StudyEarnAssistant = () => {
   } = useAssistant();
   
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { speak, stop, isSpeaking } = useTextToSpeech();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [conversationMode, setConversationMode] = useState(false);
-  const [isListeningInConversation, setIsListeningInConversation] = useState(false);
   const [realtimeVoiceOpen, setRealtimeVoiceOpen] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
-  const conversationRecognitionRef = useRef<ISpeechRecognition | null>(null);
-  const lastSpokenIdRef = useRef<string | null>(null);
-  const pendingConversationSend = useRef<string | null>(null);
   const { toast } = useToast();
 
   // Handle FAB click - check auth first
@@ -134,139 +125,30 @@ export const StudyEarnAssistant = () => {
     }
   }, [messages, isLoading]);
 
-  // Auto-speak new assistant messages and restart listening in conversation mode
+  // Track speaking state - clear speakingMessageId when TTS stops
   useEffect(() => {
-    if (!voiceEnabled || messages.length === 0) return;
-    
-    const lastMessage = messages[messages.length - 1];
-    if (
-      lastMessage.role === 'assistant' && 
-      lastMessage.content && 
-      lastMessage.id !== lastSpokenIdRef.current &&
-      !isLoading
-    ) {
-      lastSpokenIdRef.current = lastMessage.id;
-      speak(lastMessage.content);
+    if (!isSpeaking && speakingMessageId) {
+      setSpeakingMessageId(null);
     }
-  }, [messages, voiceEnabled, speak, isLoading]);
+  }, [isSpeaking, speakingMessageId]);
 
-  // Start listening when TTS finishes in conversation mode
-  useEffect(() => {
-    if (conversationMode && !isSpeaking && !isLoading && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant' && lastMessage.content) {
-        // Small delay before starting to listen again
-        const timer = setTimeout(() => {
-          if (conversationMode && !isSpeaking && !isLoading) {
-            startConversationListening();
-          }
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isSpeaking, conversationMode, isLoading, messages]);
-
-  // Initialize conversation mode speech recognition
-  const startConversationListening = useCallback(() => {
-    if (!conversationRecognitionRef.current || !conversationMode) return;
-    
-    try {
-      setIsListeningInConversation(true);
-      conversationRecognitionRef.current.start();
-    } catch (error) {
-      console.error('Error starting conversation listening:', error);
-    }
-  }, [conversationMode]);
-
-  const stopConversationListening = useCallback(() => {
-    if (conversationRecognitionRef.current) {
-      try {
-        conversationRecognitionRef.current.stop();
-      } catch (error) {
-        // Ignore errors when stopping
-      }
-    }
-    setIsListeningInConversation(false);
-  }, []);
-
-  // Setup conversation mode recognition
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      conversationRecognitionRef.current = new SpeechRecognition();
-      conversationRecognitionRef.current.continuous = false;
-      conversationRecognitionRef.current.interimResults = false;
-      conversationRecognitionRef.current.lang = 'en-US';
-
-      conversationRecognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript.trim()) {
-          pendingConversationSend.current = transcript;
-        }
-      };
-
-      conversationRecognitionRef.current.onerror = (event) => {
-        console.error('Conversation recognition error:', event.error);
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          setIsListeningInConversation(false);
-        }
-      };
-
-      conversationRecognitionRef.current.onend = () => {
-        setIsListeningInConversation(false);
-        // Send the message if we have one
-        if (pendingConversationSend.current && conversationMode) {
-          const message = pendingConversationSend.current;
-          pendingConversationSend.current = null;
-          sendMessage(message);
-        }
-      };
-    }
-
-    return () => {
-      if (conversationRecognitionRef.current) {
-        try {
-          conversationRecognitionRef.current.stop();
-        } catch (error) {
-          // Ignore
-        }
-      }
-    };
-  }, [conversationMode, sendMessage]);
-
-  // Toggle conversation mode
-  const toggleConversationMode = useCallback(() => {
-    if (conversationMode) {
-      // Turn off
-      setConversationMode(false);
-      stopConversationListening();
+  // Handle speaking a specific message (per-response TTS)
+  const handleSpeakMessage = (messageId: string, content: string) => {
+    if (speakingMessageId === messageId && isSpeaking) {
+      // Stop speaking this message
       stop();
-      toast({
-        title: 'Conversation Mode Off',
-        description: 'Voice conversation ended',
-      });
+      setSpeakingMessageId(null);
     } else {
-      // Turn on
-      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        toast({
-          title: 'Not Supported',
-          description: 'Voice recognition is not supported in your browser.',
-          variant: 'destructive',
-        });
-        return;
+      // Stop any current speech and speak this message
+      if (isSpeaking) {
+        stop();
       }
-      setConversationMode(true);
-      setVoiceEnabled(true);
-      toast({
-        title: 'Conversation Mode On',
-        description: 'Speak naturally - I\'ll listen and respond!',
-      });
-      // Start listening immediately
-      setTimeout(() => startConversationListening(), 300);
+      setSpeakingMessageId(messageId);
+      speak(content);
     }
-  }, [conversationMode, stopConversationListening, stop, toast, startConversationListening]);
+  };
 
-  // Initialize speech recognition
+  // Initialize speech recognition for voice input
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -324,17 +206,6 @@ export const StudyEarnAssistant = () => {
         description: 'Speak now. Click the mic again to stop.',
       });
     }
-  };
-
-  const toggleVoice = () => {
-    if (isSpeaking) {
-      stop();
-    }
-    setVoiceEnabled(!voiceEnabled);
-    toast({
-      title: voiceEnabled ? 'Voice Off' : 'Voice On',
-      description: voiceEnabled ? 'AI will no longer speak responses' : 'AI will speak responses aloud',
-    });
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -484,22 +355,6 @@ export const StudyEarnAssistant = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={toggleVoice}
-                  className={cn(
-                    "h-8 w-8",
-                    isSpeaking && "text-primary animate-pulse"
-                  )}
-                  title={voiceEnabled ? "Turn off voice" : "Turn on voice"}
-                >
-                  {voiceEnabled ? (
-                    <Volume2 className="h-4 w-4" />
-                  ) : (
-                    <VolumeX className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
                   onClick={clearMessages}
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   title="Clear conversation"
@@ -517,26 +372,6 @@ export const StudyEarnAssistant = () => {
               </div>
             </div>
 
-            {/* Messages */}
-            {/* Conversation Mode Indicator with Sound Waves */}
-            {conversationMode && (
-              <div className="flex items-center justify-center gap-3 border-b border-border bg-green-500/10 px-4 py-2">
-                <SoundWaveAnimation 
-                  isActive={isListeningInConversation || isSpeaking || isLoading}
-                  variant={isListeningInConversation ? 'listening' : isSpeaking ? 'speaking' : 'thinking'}
-                />
-                <span className="text-xs font-medium text-foreground">
-                  {isListeningInConversation ? "Listening..." : 
-                   isSpeaking ? "Speaking..." : 
-                   isLoading ? "Thinking..." : "Voice conversation active"}
-                </span>
-                <SoundWaveAnimation 
-                  isActive={isListeningInConversation || isSpeaking || isLoading}
-                  variant={isListeningInConversation ? 'listening' : isSpeaking ? 'speaking' : 'thinking'}
-                />
-              </div>
-            )}
-
             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -549,15 +384,6 @@ export const StudyEarnAssistant = () => {
                   <p className="mb-6 text-sm text-muted-foreground">
                     I'm your StudyEarn companion. How can I help you learn and earn today?
                   </p>
-
-                  {/* Voice Conversation CTA */}
-                  <button
-                    onClick={toggleConversationMode}
-                    className="mb-4 flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-green-600 hover:scale-105"
-                  >
-                    <Phone className="h-4 w-4" />
-                    Start Voice Conversation
-                  </button>
                   
                   {/* Quick Actions */}
                   <div className="grid w-full grid-cols-2 gap-2">
@@ -628,6 +454,25 @@ export const StudyEarnAssistant = () => {
                                 </span>
                               ))}
                           </div>
+                        )}
+                        
+                        {/* TTS button for assistant messages - like CropGuard */}
+                        {message.role === 'assistant' && message.content && (
+                          <button
+                            onClick={() => handleSpeakMessage(message.id, message.content)}
+                            className={cn(
+                              "mt-2 flex items-center gap-1 text-xs transition-colors",
+                              speakingMessageId === message.id && isSpeaking
+                                ? "text-primary"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <Volume2 className={cn(
+                              "h-3.5 w-3.5",
+                              speakingMessageId === message.id && isSpeaking && "animate-pulse"
+                            )} />
+                            {speakingMessageId === message.id && isSpeaking ? "Stop" : "Listen"}
+                          </button>
                         )}
                       </div>
                     </motion.div>
