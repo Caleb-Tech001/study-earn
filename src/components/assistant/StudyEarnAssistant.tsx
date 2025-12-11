@@ -337,32 +337,62 @@ export const StudyEarnAssistant = () => {
     });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     const newAttachments: AttachmentInfo[] = [];
-    Array.from(files).forEach(file => {
+    
+    for (const file of Array.from(files)) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: 'File Too Large',
           description: `${file.name} exceeds 5MB limit.`,
           variant: 'destructive',
         });
-        return;
+        continue;
       }
-      newAttachments.push({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
-    });
 
-    setAttachments(prev => [...prev, ...newAttachments]);
-    toast({
-      title: 'Attachment Added',
-      description: `${newAttachments.length} file(s) ready to analyze.`,
-    });
+      // Convert images to base64 for vision
+      if (file.type.startsWith('image/')) {
+        try {
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          newAttachments.push({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            preview: base64,
+            base64: base64,
+          });
+        } catch (error) {
+          console.error('Error reading file:', error);
+          toast({
+            title: 'File Error',
+            description: `Could not read ${file.name}.`,
+            variant: 'destructive',
+          });
+        }
+      } else {
+        newAttachments.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
+      }
+    }
+
+    if (newAttachments.length > 0) {
+      setAttachments(prev => [...prev, ...newAttachments]);
+      toast({
+        title: 'Attachment Added',
+        description: `${newAttachments.length} file(s) ready to analyze.`,
+      });
+    }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -563,22 +593,40 @@ export const StudyEarnAssistant = () => {
                             : 'bg-muted text-foreground'
                         )}
                       >
+                        {/* Display image attachments */}
+                        {message.attachments && message.attachments.some(a => a.preview) && (
+                          <div className="mb-2 flex flex-wrap gap-2">
+                            {message.attachments
+                              .filter(att => att.preview)
+                              .map((att, i) => (
+                                <img
+                                  key={i}
+                                  src={att.preview}
+                                  alt={att.name}
+                                  className="max-h-40 max-w-full rounded-lg object-contain"
+                                />
+                              ))}
+                          </div>
+                        )}
                         <p className="whitespace-pre-wrap">{message.content || (
                           <span className="flex items-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Thinking...
                           </span>
                         )}</p>
-                        {message.attachments && message.attachments.length > 0 && (
+                        {/* Show non-image attachments */}
+                        {message.attachments && message.attachments.filter(a => !a.preview).length > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
-                            {message.attachments.map((att, i) => (
-                              <span
-                                key={i}
-                                className="rounded bg-background/20 px-2 py-0.5 text-xs"
-                              >
-                                📎 {att.name}
-                              </span>
-                            ))}
+                            {message.attachments
+                              .filter(att => !att.preview)
+                              .map((att, i) => (
+                                <span
+                                  key={i}
+                                  className="rounded bg-background/20 px-2 py-0.5 text-xs"
+                                >
+                                  📎 {att.name}
+                                </span>
+                              ))}
                           </div>
                         )}
                       </div>
