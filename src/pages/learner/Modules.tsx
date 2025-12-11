@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Search, BookOpen, Clock, Trophy, Star, CheckCircle, Loader2 } from 'lucide-react';
+import { Search, BookOpen, Clock, Trophy, Star, CheckCircle, Loader2, Gamepad2, Target, Grid3X3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { WordFindGame } from '@/components/games/WordFindGame';
+import { CrosswordGame } from '@/components/games/CrosswordGame';
 
 const CATEGORIES = ['All', 'Coding', 'Digital Marketing', 'AI Basics', 'Graphic Design'];
 
@@ -17,6 +20,7 @@ const Modules = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [enrolledModules, setEnrolledModules] = useState<string[]>(['1', '2', '3']);
+  const [activeTab, setActiveTab] = useState('modules');
 
   const modules = [
     {
@@ -170,12 +174,28 @@ const Modules = () => {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="mb-2 font-display text-4xl font-bold">My Learning Modules</h1>
+            <h1 className="mb-2 font-display text-4xl font-bold">Learn & Play</h1>
             <p className="text-muted-foreground">
-              Continue your journey and earn rewards for every completed lesson
+              Complete modules and play games to earn rewards
             </p>
           </div>
         </div>
+
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="modules" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              Learning Modules
+            </TabsTrigger>
+            <TabsTrigger value="games" className="gap-2">
+              <Gamepad2 className="h-4 w-4" />
+              Skill Games
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Learning Modules Tab */}
+          <TabsContent value="modules" className="mt-6 space-y-6">
 
         {/* Search and Filter */}
         <Card className="border-2 p-4">
@@ -357,6 +377,67 @@ const Modules = () => {
           ))}
           </div>
         )}
+          </TabsContent>
+
+          {/* Games Tab */}
+          <TabsContent value="games" className="mt-6 space-y-6">
+            <div className="grid gap-6 md:grid-cols-3">
+              <Card className="border-2 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-xl bg-primary/10 p-3">
+                    <Target className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Word Find</p>
+                    <p className="font-display text-2xl font-bold">Find Words</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="border-2 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-xl bg-accent/10 p-3">
+                    <Grid3X3 className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Crossword</p>
+                    <p className="font-display text-2xl font-bold">Tech Puzzles</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="border-2 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-xl bg-secondary/10 p-3">
+                    <Trophy className="h-6 w-6 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Earn Points</p>
+                    <p className="font-display text-2xl font-bold">Play & Win</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Word Find Game */}
+            <div>
+              <h2 className="mb-4 font-display text-2xl font-bold flex items-center gap-2">
+                <Target className="h-6 w-6 text-primary" />
+                Word Find Challenge
+              </h2>
+              <WordFindGame />
+            </div>
+
+            {/* Crossword Game */}
+            <div>
+              <h2 className="mb-4 font-display text-2xl font-bold flex items-center gap-2">
+                <Grid3X3 className="h-6 w-6 text-accent" />
+                Crossword Puzzle
+              </h2>
+              <CrosswordGame />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

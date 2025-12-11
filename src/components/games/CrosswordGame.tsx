@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { Trophy, Lightbulb, RotateCcw, Star, Zap } from 'lucide-react';
 
 interface CrosswordClue {
@@ -57,6 +58,7 @@ const puzzles = [
 export const CrosswordGame = () => {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
+  const { addPoints } = useWallet();
   const [currentLevel, setCurrentLevel] = useState(0);
   const [clues, setClues] = useState<CrosswordClue[]>(puzzles[0].clues);
   const [selectedClue, setSelectedClue] = useState<CrosswordClue | null>(null);
@@ -85,8 +87,19 @@ export const CrosswordGame = () => {
     ));
 
     if (isCorrect) {
-      const pointsEarned = Math.max(5, 10 - hintsUsed * 2);
+      const pointsEarned = Math.max(50, 100 - hintsUsed * 20);
       setScore(prev => prev + pointsEarned);
+      
+      // Add points to wallet
+      addPoints(pointsEarned);
+      
+      addNotification({
+        title: 'Correct Answer!',
+        message: `+${pointsEarned} points for solving the clue!`,
+        type: 'reward',
+        points: pointsEarned,
+      });
+      
       toast({
         title: 'Correct!',
         description: `+${pointsEarned} points earned!`,
@@ -116,20 +129,23 @@ export const CrosswordGame = () => {
   };
 
   const handleCompleteLevel = () => {
-    const pointsEarned = puzzle.points;
-    setScore(prev => prev + pointsEarned);
+    const bonusPoints = puzzle.points * 10;
+    setScore(prev => prev + bonusPoints);
     setCompletedLevels(prev => [...prev, currentLevel]);
+    
+    // Add bonus points to wallet
+    addPoints(bonusPoints);
     
     addNotification({
       title: `Level ${puzzle.level} Completed!`,
-      message: `Amazing! You completed "${puzzle.title}" and earned ${pointsEarned} points!`,
+      message: `Amazing! You completed "${puzzle.title}" and earned ${bonusPoints} bonus points!`,
       type: 'reward',
-      points: pointsEarned,
+      points: bonusPoints,
     });
 
     toast({
       title: '🎉 Level Complete!',
-      description: `You earned ${pointsEarned} points! ${currentLevel < puzzles.length - 1 ? 'Next level unlocked!' : 'All levels completed!'}`,
+      description: `You earned ${bonusPoints} bonus points! ${currentLevel < puzzles.length - 1 ? 'Next level unlocked!' : 'All levels completed!'}`,
     });
   };
 

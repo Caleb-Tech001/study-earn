@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { Trophy, RotateCcw, Zap, Star, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -64,6 +65,7 @@ const DIRECTIONS = {
 export const WordFindGame = () => {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
+  const { addPoints } = useWallet();
   const [currentLevel, setCurrentLevel] = useState(0);
   const [grid, setGrid] = useState<CellState[][]>([]);
   const [wordPositions, setWordPositions] = useState<WordPosition[]>([]);
@@ -72,6 +74,7 @@ export const WordFindGame = () => {
   const [selectedCells, setSelectedCells] = useState<{ row: number; col: number }[]>([]);
   const [score, setScore] = useState(0);
   const [completedLevels, setCompletedLevels] = useState<number[]>([]);
+  const [pointsEarnedThisSession, setPointsEarnedThisSession] = useState(0);
 
   const level = levels[currentLevel];
   const foundWords = wordPositions.filter(w => w.found).length;
@@ -237,8 +240,19 @@ export const WordFindGame = () => {
       });
       setGrid(newGrid);
 
-      const wordPoints = Math.ceil(newPositions[matchIndex].word.length * 2);
+      const wordPoints = Math.ceil(newPositions[matchIndex].word.length * 10);
       setScore(prev => prev + wordPoints);
+      setPointsEarnedThisSession(prev => prev + wordPoints);
+      
+      // Add points to wallet balance
+      addPoints(wordPoints);
+
+      addNotification({
+        title: 'Word Found!',
+        message: `+${wordPoints} points for finding "${newPositions[matchIndex].word}"`,
+        type: 'reward',
+        points: wordPoints,
+      });
 
       toast({
         title: 'Word Found!',
@@ -252,20 +266,24 @@ export const WordFindGame = () => {
   };
 
   const handleCompleteLevel = () => {
-    const pointsEarned = level.points;
-    setScore(prev => prev + pointsEarned);
+    const bonusPoints = level.points * 10; // Bonus points for completing level
+    setScore(prev => prev + bonusPoints);
     setCompletedLevels(prev => [...prev, currentLevel]);
+    setPointsEarnedThisSession(prev => prev + bonusPoints);
+
+    // Add bonus points to wallet
+    addPoints(bonusPoints);
 
     addNotification({
       title: `Level ${level.id} Completed!`,
-      message: `You found all words in "${level.title}" and earned ${pointsEarned} bonus points!`,
+      message: `You found all words in "${level.title}" and earned ${bonusPoints} bonus points!`,
       type: 'reward',
-      points: pointsEarned,
+      points: bonusPoints,
     });
 
     toast({
       title: '🎉 Level Complete!',
-      description: `You earned ${pointsEarned} bonus points!`,
+      description: `You earned ${bonusPoints} bonus points!`,
     });
   };
 
