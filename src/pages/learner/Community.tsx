@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,7 @@ const categories = ['General', 'Python', 'JavaScript', 'Web Development', 'Data 
 const Community = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { questions, addQuestion, voteQuestion } = useCommunity();
+  const { questions, loading, addQuestion, voteQuestion } = useCommunity();
   const [activeTab, setActiveTab] = useState('discussions');
   const [showNewQuestion, setShowNewQuestion] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '', category: 'General' });
@@ -110,12 +111,8 @@ const Community = () => {
     { name: 'Machine Learning', posts: 54 },
   ];
 
-  const handleVote = (type: 'up' | 'down', id: string) => {
-    voteQuestion(id, type);
-    toast({
-      title: type === 'up' ? 'Upvoted!' : 'Downvoted',
-      description: 'Your vote has been recorded',
-    });
+  const handleVote = async (type: 'up' | 'down', id: string) => {
+    await voteQuestion(id, type);
   };
 
   const handleCompleteMission = (mission: typeof missions[0]) => {
@@ -225,7 +222,10 @@ const Community = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8"
+            className={cn(
+              "h-8 w-8",
+              discussion.userVote === 'up' && "text-primary bg-primary/10"
+            )}
             onClick={() => handleVote('up', discussion.id)}
           >
             <ThumbsUp className="h-4 w-4" />
@@ -234,7 +234,10 @@ const Community = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8"
+            className={cn(
+              "h-8 w-8",
+              discussion.userVote === 'down' && "text-destructive bg-destructive/10"
+            )}
             onClick={() => handleVote('down', discussion.id)}
           >
             <ThumbsDown className="h-4 w-4" />
