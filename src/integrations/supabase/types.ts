@@ -98,6 +98,56 @@ export type Database = {
         }
         Relationships: []
       }
+      community_replies: {
+        Row: {
+          author_avatar: string | null
+          author_name: string
+          content: string
+          created_at: string
+          dislikes: number
+          id: string
+          is_best_answer: boolean
+          likes: number
+          question_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_name: string
+          content: string
+          created_at?: string
+          dislikes?: number
+          id?: string
+          is_best_answer?: boolean
+          likes?: number
+          question_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_avatar?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string
+          dislikes?: number
+          id?: string
+          is_best_answer?: boolean
+          likes?: number
+          question_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_replies_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "community_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_votes: {
         Row: {
           created_at: string
@@ -276,6 +326,38 @@ export type Database = {
           years_of_experience?: number | null
         }
         Relationships: []
+      }
+      reply_votes: {
+        Row: {
+          created_at: string
+          id: string
+          reply_id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reply_id: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reply_id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reply_votes_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "community_replies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
