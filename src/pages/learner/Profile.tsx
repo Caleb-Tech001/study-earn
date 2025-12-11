@@ -8,18 +8,59 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Trophy, Calendar, Mail, Phone } from 'lucide-react';
+import { Camera, Trophy, Calendar, Mail, Phone, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  const userName = user?.user_metadata?.full_name || 'User';
+  // Form state - persisted to database
+  const [fullName, setFullName] = useState('');
+  const [bio, setBio] = useState('');
+  const [country, setCountry] = useState('');
+  const [phone, setPhone] = useState('');
+  const [interests, setInterests] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  
   const userEmail = user?.email || '';
+
+  // Load profile data from database
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Error loading profile:', error);
+        } else if (data) {
+          setFullName(data.full_name || '');
+          setBio(data.bio || '');
+          setCountry(data.country || '');
+          setPhone(data.phone || data.phone_number || '');
+          setInterests(data.learning_interests?.join(', ') || '');
+          setAvatarUrl(data.avatar_url || user?.user_metadata?.avatar_url || '');
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProfile();
+  }, [user?.id, user?.user_metadata?.avatar_url]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -33,7 +74,7 @@ const Profile = () => {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user?.id}/${Math.random()}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
@@ -43,11 +84,15 @@ const Profile = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase.auth.updateUser({
+      // Update both auth metadata and profiles table
+      await supabase.auth.updateUser({
         data: { avatar_url: publicUrl }
       });
-
-      if (updateError) throw updateError;
+      
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user?.id);
 
       setAvatarUrl(publicUrl);
       
@@ -66,11 +111,52 @@ const Profile = () => {
     }
   };
 
-  const handleSaveProfile = () => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setSaving(true);
+      
+      // Parse interests as array
+      const interestsArray = interests
+        .split(',')
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+      
+      // Update profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          bio: bio,
+          country: country,
+          phone: phone,
+          learning_interests: interestsArray,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Also update auth metadata for full_name
+      await supabase.auth.updateUser({
+        data: { full_name: fullName }
+      });
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully saved.",
+      });
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Could not save profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const stats = [
@@ -78,6 +164,16 @@ const Profile = () => {
     { label: 'Days Active', value: '45', icon: Calendar },
     { label: 'Total Earned', value: '$1,250', icon: Trophy },
   ];
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -98,7 +194,7 @@ const Profile = () => {
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={avatarUrl} />
                   <AvatarFallback className="bg-primary text-3xl text-primary-foreground">
-                    {userName.charAt(0).toUpperCase()}
+                    {(fullName || 'U').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <input
@@ -116,11 +212,15 @@ const Profile = () => {
                   onClick={() => document.getElementById('avatar-upload')?.click()}
                   disabled={uploading}
                 >
-                  <Camera className="h-4 w-4" />
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               <div>
-                <h3 className="font-display text-2xl font-bold">{userName}</h3>
+                <h3 className="font-display text-2xl font-bold">{fullName || 'User'}</h3>
                 <p className="text-muted-foreground">Learner</p>
                 <Badge className="mt-2">Level 5</Badge>
               </div>
@@ -130,13 +230,18 @@ const Profile = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" defaultValue={userName} />
+                  <Input 
+                    id="fullName" 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <Input id="email" type="email" defaultValue={userEmail} />
+                    <Input id="email" type="email" value={userEmail} disabled />
                   </div>
                 </div>
               </div>
@@ -147,19 +252,32 @@ const Profile = () => {
                   id="bio"
                   placeholder="Tell us about yourself..."
                   rows={4}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
                 />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="country">Country</Label>
-                  <Input id="country" placeholder="Select your country" />
+                  <Input 
+                    id="country" 
+                    placeholder="Select your country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      placeholder="+1 (555) 000-0000"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
                   </div>
                 </div>
               </div>
@@ -169,11 +287,24 @@ const Profile = () => {
                 <Input
                   id="interests"
                   placeholder="e.g., Python, Web Development, Data Science"
+                  value={interests}
+                  onChange={(e) => setInterests(e.target.value)}
                 />
               </div>
 
-              <Button onClick={handleSaveProfile} className="w-full md:w-auto">
-                Save Changes
+              <Button 
+                onClick={handleSaveProfile} 
+                className="w-full md:w-auto"
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
               </Button>
             </div>
           </Card>
