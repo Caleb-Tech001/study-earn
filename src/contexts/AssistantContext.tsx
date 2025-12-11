@@ -16,6 +16,7 @@ export interface AttachmentInfo {
   type: string;
   size: number;
   preview?: string;
+  base64?: string;
 }
 
 interface UserContext {
@@ -119,6 +120,21 @@ export const AssistantProvider = ({ children }: { children: ReactNode }) => {
         content: m.content,
       }));
 
+      // Build the user message content for the AI
+      let userContent: any = content;
+      
+      // If there are image attachments, format for vision
+      if (attachments && attachments.some(a => a.type.startsWith('image/') && a.base64)) {
+        const imageAttachments = attachments.filter(a => a.type.startsWith('image/') && a.base64);
+        userContent = [
+          { type: 'text', text: content || 'Please analyze this image.' },
+          ...imageAttachments.map(a => ({
+            type: 'image_url',
+            image_url: { url: a.base64 }
+          }))
+        ];
+      }
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/studyearn-assistant`, {
         method: 'POST',
         headers: {
@@ -126,7 +142,7 @@ export const AssistantProvider = ({ children }: { children: ReactNode }) => {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          messages: [...conversationHistory, { role: 'user', content }],
+          messages: [...conversationHistory, { role: 'user', content: userContent }],
           userContext,
         }),
       });
