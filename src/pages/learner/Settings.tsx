@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,10 +8,35 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Bell, Lock, CreditCard } from 'lucide-react';
+import { Shield, Bell, Lock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { PricingPlans } from '@/components/subscription/PricingPlans';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const Settings = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const { plan, subscriptionEnd, checkSubscription } = useSubscription();
+
+  useEffect(() => {
+    // Check for success/canceled params from Stripe redirect
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+
+    if (success === 'true') {
+      toast({
+        title: 'Subscription Successful!',
+        description: 'Welcome to your new plan. Refreshing your subscription status...',
+      });
+      // Refresh subscription status
+      setTimeout(() => checkSubscription(), 2000);
+    } else if (canceled === 'true') {
+      toast({
+        title: 'Checkout Canceled',
+        description: 'Your subscription was not processed.',
+        variant: 'destructive',
+      });
+    }
+  }, [searchParams, toast, checkSubscription]);
 
   const handleSaveSettings = () => {
     toast({
@@ -17,6 +44,8 @@ const Settings = () => {
       description: "Your preferences have been saved successfully.",
     });
   };
+
+  const defaultTab = searchParams.get('tab') || 'notifications';
 
   return (
     <DashboardLayout>
@@ -28,7 +57,7 @@ const Settings = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="notifications" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
@@ -202,35 +231,28 @@ const Settings = () => {
                 <div>
                   <h2 className="font-display text-xl font-bold">Billing & Subscription</h2>
                   <p className="text-sm text-muted-foreground">
-                    Manage your payment methods and subscription
+                    Manage your subscription and payment methods
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="rounded-lg border border-border bg-muted/50 p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="font-semibold">Current Plan</h3>
-                    <span className="rounded-full bg-primary px-3 py-1 text-sm text-primary-foreground">
-                      Free
-                    </span>
+              {/* Current Plan Status */}
+              {plan !== 'free' && subscriptionEnd && (
+                <div className="mb-6 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium capitalize">Active {plan} Plan</p>
+                    <p className="text-sm text-muted-foreground">
+                      Renews on {new Date(subscriptionEnd).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    You're currently on the free plan
-                  </p>
                 </div>
+              )}
 
+              <div className="space-y-6">
                 <div>
-                  <h3 className="mb-4 font-semibold">Payment Methods</h3>
-                  <Button variant="outline">Add Payment Method</Button>
-                </div>
-
-                <div>
-                  <h3 className="mb-4 font-semibold">Upgrade Plan</h3>
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    Unlock premium features and earn more rewards
-                  </p>
-                  <Button>View Premium Plans</Button>
+                  <h3 className="mb-4 font-semibold">Choose Your Plan</h3>
+                  <PricingPlans onSuccess={() => checkSubscription()} />
                 </div>
               </div>
             </Card>
