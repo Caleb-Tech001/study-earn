@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/contexts/CommunityContext';
 import { generateLeaderboardData } from '@/utils/leaderboardData';
 import { QuestionReplies } from '@/components/community/QuestionReplies';
+import { opportunities, getOpportunityCounts, type Opportunity } from '@/utils/opportunitiesData';
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -44,6 +45,8 @@ import {
   Calendar,
   MapPin,
   DollarSign,
+  Globe,
+  Filter,
 } from 'lucide-react';
 
 const categories = ['General', 'Python', 'JavaScript', 'Web Development', 'Data Structures', 'Data Science', 'Machine Learning', 'Mobile Dev'];
@@ -70,6 +73,7 @@ const Community = () => {
   const [showNewQuestion, setShowNewQuestion] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '', category: 'General' });
   const [selectedQuestion, setSelectedQuestion] = useState<SelectedQuestion | null>(null);
+  const [opportunityFilter, setOpportunityFilter] = useState<'all' | 'scholarship' | 'internship' | 'hackathon'>('all');
 
   const userName = user?.user_metadata?.full_name || 'Caleb Oladepo';
   const userAvatar = user?.user_metadata?.avatar_url || '';
@@ -127,74 +131,16 @@ const Community = () => {
     },
   ];
 
-  const opportunities = [
-    {
-      id: '1',
-      type: 'scholarship',
-      title: 'Google Africa Developer Scholarship',
-      organization: 'Google',
-      deadline: 'Jan 15, 2025',
-      location: 'Africa',
-      description: 'Full scholarship for mobile and web development training with certification.',
-      link: 'https://developers.google.com/africa',
-      reward: 'Full Tuition + Certification',
-    },
-    {
-      id: '2',
-      type: 'internship',
-      title: 'Microsoft LEAP Internship Program',
-      organization: 'Microsoft',
-      deadline: 'Feb 28, 2025',
-      location: 'Nigeria, Kenya, South Africa',
-      description: '16-week immersive engineering internship for career switchers.',
-      link: 'https://microsoft.com/leap',
-      reward: 'Paid Internship',
-    },
-    {
-      id: '3',
-      type: 'hackathon',
-      title: 'HackNaija 2025',
-      organization: 'Tech Community Nigeria',
-      deadline: 'Mar 1, 2025',
-      location: 'Virtual + Lagos',
-      description: '48-hour hackathon solving local problems with technology.',
-      link: 'https://hacknaija.com',
-      reward: '₦5,000,000 Prize Pool',
-    },
-    {
-      id: '4',
-      type: 'scholarship',
-      title: 'ALX Software Engineering',
-      organization: 'ALX Africa',
-      deadline: 'Rolling Admissions',
-      location: 'Pan-African',
-      description: '12-month intensive software engineering program with job placement support.',
-      link: 'https://alxafrica.com',
-      reward: 'Free Training + Career Support',
-    },
-    {
-      id: '5',
-      type: 'internship',
-      title: 'Andela Technical Leadership Program',
-      organization: 'Andela',
-      deadline: 'Jan 31, 2025',
-      location: 'Remote',
-      description: 'Remote engineering roles with global tech companies.',
-      link: 'https://andela.com',
-      reward: 'Competitive Salary',
-    },
-    {
-      id: '6',
-      type: 'hackathon',
-      title: 'ETHGlobal Lagos',
-      organization: 'ETHGlobal',
-      deadline: 'Apr 15, 2025',
-      location: 'Lagos, Nigeria',
-      description: 'Build the future of Web3 and blockchain applications.',
-      link: 'https://ethglobal.com',
-      reward: '$50,000 in Prizes',
-    },
-  ];
+  const opportunityCounts = getOpportunityCounts();
+  
+  const filteredOpportunities = useMemo(() => {
+    const now = new Date();
+    let filtered = opportunities.filter(opp => opp.deadlineDate >= now);
+    if (opportunityFilter !== 'all') {
+      filtered = filtered.filter(opp => opp.type === opportunityFilter);
+    }
+    return filtered.sort((a, b) => a.deadlineDate.getTime() - b.deadlineDate.getTime());
+  }, [opportunityFilter]);
 
   const trendingTopics = [
     { name: 'Python', posts: 124 },
@@ -700,49 +646,97 @@ const Community = () => {
           {/* Opportunities Tab */}
           <TabsContent value="opportunities" className="mt-6">
             <div className="space-y-6">
-              <div className="flex items-center gap-4 flex-wrap">
-                <Badge variant="outline" className="gap-2 px-4 py-2">
+              {/* Filter Buttons */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <Button 
+                  variant={opportunityFilter === 'all' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setOpportunityFilter('all')}
+                  className="gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  All ({opportunityCounts.all})
+                </Button>
+                <Button 
+                  variant={opportunityFilter === 'scholarship' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setOpportunityFilter('scholarship')}
+                  className="gap-2"
+                >
                   <GraduationCap className="h-4 w-4" />
-                  Scholarships
-                </Badge>
-                <Badge variant="outline" className="gap-2 px-4 py-2">
+                  Scholarships ({opportunityCounts.scholarships})
+                </Button>
+                <Button 
+                  variant={opportunityFilter === 'internship' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setOpportunityFilter('internship')}
+                  className="gap-2"
+                >
                   <Briefcase className="h-4 w-4" />
-                  Internships
-                </Badge>
-                <Badge variant="outline" className="gap-2 px-4 py-2">
+                  Internships ({opportunityCounts.internships})
+                </Button>
+                <Button 
+                  variant={opportunityFilter === 'hackathon' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setOpportunityFilter('hackathon')}
+                  className="gap-2"
+                >
                   <Code className="h-4 w-4" />
-                  Hackathons
-                </Badge>
+                  Hackathons ({opportunityCounts.hackathons})
+                </Button>
               </div>
 
+              {/* Results count */}
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredOpportunities.length} {opportunityFilter === 'all' ? 'opportunities' : opportunityFilter + 's'} with upcoming deadlines
+              </p>
+
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {opportunities.map((opp) => (
+                {filteredOpportunities.map((opp) => (
                   <Card key={opp.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
                     <div className="flex items-start justify-between mb-4">
                       <div className={`rounded-xl p-3 ${getOpportunityColor(opp.type)}`}>
                         {getOpportunityIcon(opp.type)}
                       </div>
-                      <Badge variant="secondary" className="capitalize">
-                        {opp.type}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant="secondary" className="capitalize">
+                          {opp.type}
+                        </Badge>
+                        {opp.isRemote && (
+                          <Badge variant="outline" className="gap-1 text-xs">
+                            <Globe className="h-3 w-3" />
+                            Remote
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     
-                    <h3 className="font-display text-lg font-bold mb-2">{opp.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">{opp.organization}</p>
-                    <p className="text-sm mb-4">{opp.description}</p>
+                    <h3 className="font-display text-lg font-bold mb-2 line-clamp-2">{opp.title}</h3>
+                    <p className="text-sm text-primary font-medium mb-3">{opp.organization}</p>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{opp.description}</p>
+                    
+                    {opp.tags && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {opp.tags.slice(0, 3).map(tag => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                     
                     <div className="space-y-2 mb-4 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>Deadline: {opp.deadline}</span>
+                        <Calendar className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">Deadline: {opp.deadline}</span>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{opp.location}</span>
+                        <MapPin className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{opp.location}</span>
                       </div>
                       <div className="flex items-center gap-2 text-success font-medium">
-                        <DollarSign className="h-4 w-4" />
-                        <span>{opp.reward}</span>
+                        <DollarSign className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{opp.reward}</span>
                       </div>
                     </div>
                     
@@ -755,6 +749,14 @@ const Community = () => {
                   </Card>
                 ))}
               </div>
+
+              {filteredOpportunities.length === 0 && (
+                <Card className="border-2 p-8 text-center">
+                  <p className="text-muted-foreground">
+                    No {opportunityFilter === 'all' ? 'opportunities' : opportunityFilter + 's'} with upcoming deadlines found.
+                  </p>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>
