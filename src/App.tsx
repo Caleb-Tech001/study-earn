@@ -41,6 +41,7 @@ import Modules from "./pages/learner/Modules";
 import Wallet from "./pages/learner/Wallet";
 import Marketplace from "./pages/learner/Marketplace";
 import Community from "./pages/learner/Community";
+import Referral from "./pages/learner/Referral";
 import Profile from "./pages/learner/Profile";
 import Settings from "./pages/learner/Settings";
 
@@ -144,6 +145,14 @@ const App = () => (
                     element={
                       <ProtectedRoute allowedRoles={['learner']}>
                         <Community />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/learner/referral"
+                    element={
+                      <ProtectedRoute allowedRoles={['learner']}>
+                        <Referral />
                       </ProtectedRoute>
                     }
                   />
