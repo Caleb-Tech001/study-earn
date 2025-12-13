@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/contexts/CommunityContext';
 import { generateLeaderboardData } from '@/utils/leaderboardData';
+import { QuestionReplies } from '@/components/community/QuestionReplies';
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -36,17 +37,39 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
+  GraduationCap,
+  Briefcase,
+  Code,
+  ExternalLink,
+  Calendar,
+  MapPin,
+  DollarSign,
 } from 'lucide-react';
 
 const categories = ['General', 'Python', 'JavaScript', 'Web Development', 'Data Structures', 'Data Science', 'Machine Learning', 'Mobile Dev'];
 
+interface SelectedQuestion {
+  id: string;
+  title: string;
+  content: string;
+  author_name: string;
+  author_avatar: string | null;
+  category: string;
+  likes: number;
+  dislikes: number;
+  replies: number;
+  created_at: string;
+  user_id: string;
+}
+
 const Community = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { questions, loading, addQuestion, voteQuestion } = useCommunity();
+  const { questions, loading, addQuestion, voteQuestion, refreshQuestions } = useCommunity();
   const [activeTab, setActiveTab] = useState('discussions');
   const [showNewQuestion, setShowNewQuestion] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '', category: 'General' });
+  const [selectedQuestion, setSelectedQuestion] = useState<SelectedQuestion | null>(null);
 
   const userName = user?.user_metadata?.full_name || 'Caleb Oladepo';
   const userAvatar = user?.user_metadata?.avatar_url || '';
@@ -104,6 +127,75 @@ const Community = () => {
     },
   ];
 
+  const opportunities = [
+    {
+      id: '1',
+      type: 'scholarship',
+      title: 'Google Africa Developer Scholarship',
+      organization: 'Google',
+      deadline: 'Jan 15, 2025',
+      location: 'Africa',
+      description: 'Full scholarship for mobile and web development training with certification.',
+      link: 'https://developers.google.com/africa',
+      reward: 'Full Tuition + Certification',
+    },
+    {
+      id: '2',
+      type: 'internship',
+      title: 'Microsoft LEAP Internship Program',
+      organization: 'Microsoft',
+      deadline: 'Feb 28, 2025',
+      location: 'Nigeria, Kenya, South Africa',
+      description: '16-week immersive engineering internship for career switchers.',
+      link: 'https://microsoft.com/leap',
+      reward: 'Paid Internship',
+    },
+    {
+      id: '3',
+      type: 'hackathon',
+      title: 'HackNaija 2025',
+      organization: 'Tech Community Nigeria',
+      deadline: 'Mar 1, 2025',
+      location: 'Virtual + Lagos',
+      description: '48-hour hackathon solving local problems with technology.',
+      link: 'https://hacknaija.com',
+      reward: '₦5,000,000 Prize Pool',
+    },
+    {
+      id: '4',
+      type: 'scholarship',
+      title: 'ALX Software Engineering',
+      organization: 'ALX Africa',
+      deadline: 'Rolling Admissions',
+      location: 'Pan-African',
+      description: '12-month intensive software engineering program with job placement support.',
+      link: 'https://alxafrica.com',
+      reward: 'Free Training + Career Support',
+    },
+    {
+      id: '5',
+      type: 'internship',
+      title: 'Andela Technical Leadership Program',
+      organization: 'Andela',
+      deadline: 'Jan 31, 2025',
+      location: 'Remote',
+      description: 'Remote engineering roles with global tech companies.',
+      link: 'https://andela.com',
+      reward: 'Competitive Salary',
+    },
+    {
+      id: '6',
+      type: 'hackathon',
+      title: 'ETHGlobal Lagos',
+      organization: 'ETHGlobal',
+      deadline: 'Apr 15, 2025',
+      location: 'Lagos, Nigeria',
+      description: 'Build the future of Web3 and blockchain applications.',
+      link: 'https://ethglobal.com',
+      reward: '$50,000 in Prizes',
+    },
+  ];
+
   const trendingTopics = [
     { name: 'Python', posts: 124 },
     { name: 'Web Development', posts: 98 },
@@ -150,6 +242,27 @@ const Community = () => {
     setShowNewQuestion(false);
   };
 
+  const handleQuestionClick = (question: typeof questions[0]) => {
+    setSelectedQuestion({
+      id: question.id,
+      title: question.title,
+      content: question.content,
+      author_name: question.author,
+      author_avatar: question.avatar || null,
+      category: question.category,
+      likes: question.likes,
+      dislikes: question.dislikes,
+      replies: question.replies,
+      created_at: question.timestamp.toISOString(),
+      user_id: question.isCurrentUser ? (user?.id || '') : '',
+    });
+  };
+
+  const handleBackFromReplies = async () => {
+    setSelectedQuestion(null);
+    await refreshQuestions();
+  };
+
   const getRankBadge = (rank: number) => {
     if (rank === 1) return <Crown className="h-5 w-5 text-yellow-500" />;
     if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
@@ -163,10 +276,28 @@ const Community = () => {
     return <Minus className="h-3 w-3 text-muted-foreground" />;
   };
 
+  const getOpportunityIcon = (type: string) => {
+    switch (type) {
+      case 'scholarship': return <GraduationCap className="h-5 w-5" />;
+      case 'internship': return <Briefcase className="h-5 w-5" />;
+      case 'hackathon': return <Code className="h-5 w-5" />;
+      default: return <Star className="h-5 w-5" />;
+    }
+  };
+
+  const getOpportunityColor = (type: string) => {
+    switch (type) {
+      case 'scholarship': return 'bg-success/10 text-success';
+      case 'internship': return 'bg-primary/10 text-primary';
+      case 'hackathon': return 'bg-warning/10 text-warning';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
   // Filter questions for different tabs
   const recentQuestions = [...questions].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   const popularQuestions = [...questions].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes));
-  const unansweredQuestions = questions.filter(q => q.replies === 0 && !q.isBestAnswer);
+  const unansweredQuestions = questions.filter(q => q.replies === 0);
 
   const LeaderboardTable = ({ data }: { data: typeof globalLeaderboard }) => (
     <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -226,7 +357,10 @@ const Community = () => {
               "h-8 w-8",
               discussion.userVote === 'up' && "text-primary bg-primary/10"
             )}
-            onClick={() => handleVote('up', discussion.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVote('up', discussion.id);
+            }}
           >
             <ThumbsUp className="h-4 w-4" />
           </Button>
@@ -238,7 +372,10 @@ const Community = () => {
               "h-8 w-8",
               discussion.userVote === 'down' && "text-destructive bg-destructive/10"
             )}
-            onClick={() => handleVote('down', discussion.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVote('down', discussion.id);
+            }}
           >
             <ThumbsDown className="h-4 w-4" />
           </Button>
@@ -266,20 +403,47 @@ const Community = () => {
               </Badge>
             )}
           </div>
-          <h3 className="mb-2 font-display text-lg font-bold hover:text-primary cursor-pointer">
+          <h3 
+            className="mb-2 font-display text-lg font-bold hover:text-primary cursor-pointer"
+            onClick={() => handleQuestionClick(discussion)}
+          >
             {discussion.title}
           </h3>
           <p className="text-sm text-muted-foreground">{discussion.content}</p>
           <div className="mt-3 flex items-center gap-4">
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleQuestionClick(discussion)}
+            >
               <Reply className="mr-2 h-4 w-4" />
               {discussion.replies} Answers
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleQuestionClick(discussion)}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Answer
             </Button>
           </div>
         </div>
       </div>
     </Card>
   );
+
+  // If a question is selected, show the replies view
+  if (selectedQuestion) {
+    return (
+      <DashboardLayout>
+        <QuestionReplies 
+          question={selectedQuestion} 
+          onBack={handleBackFromReplies} 
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -288,7 +452,7 @@ const Community = () => {
           <div>
             <h1 className="mb-2 font-display text-4xl font-bold">Community</h1>
             <p className="text-muted-foreground">
-              Connect with fellow learners, compete, and complete missions
+              Connect with fellow learners, compete, and discover opportunities
             </p>
           </div>
           <Button onClick={() => setShowNewQuestion(true)}>
@@ -346,6 +510,7 @@ const Community = () => {
             <TabsTrigger value="discussions">Q&A Hub</TabsTrigger>
             <TabsTrigger value="missions">Missions</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
           </TabsList>
 
           {/* Q&A Hub Tab */}
@@ -359,7 +524,11 @@ const Community = () => {
                     <TabsTrigger value="unanswered">Unanswered ({unansweredQuestions.length})</TabsTrigger>
                   </TabsList>
                   <TabsContent value="recent" className="mt-4 space-y-4">
-                    {recentQuestions.length === 0 ? (
+                    {loading ? (
+                      <Card className="border-2 p-8 text-center">
+                        <p className="text-muted-foreground">Loading questions...</p>
+                      </Card>
+                    ) : recentQuestions.length === 0 ? (
                       <Card className="border-2 p-8 text-center">
                         <p className="text-muted-foreground">No questions yet. Be the first to ask!</p>
                       </Card>
@@ -526,6 +695,67 @@ const Community = () => {
                 </TabsContent>
               </Tabs>
             </Card>
+          </TabsContent>
+
+          {/* Opportunities Tab */}
+          <TabsContent value="opportunities" className="mt-6">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 flex-wrap">
+                <Badge variant="outline" className="gap-2 px-4 py-2">
+                  <GraduationCap className="h-4 w-4" />
+                  Scholarships
+                </Badge>
+                <Badge variant="outline" className="gap-2 px-4 py-2">
+                  <Briefcase className="h-4 w-4" />
+                  Internships
+                </Badge>
+                <Badge variant="outline" className="gap-2 px-4 py-2">
+                  <Code className="h-4 w-4" />
+                  Hackathons
+                </Badge>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {opportunities.map((opp) => (
+                  <Card key={opp.id} className="border-2 p-6 transition-smooth hover:shadow-lg">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`rounded-xl p-3 ${getOpportunityColor(opp.type)}`}>
+                        {getOpportunityIcon(opp.type)}
+                      </div>
+                      <Badge variant="secondary" className="capitalize">
+                        {opp.type}
+                      </Badge>
+                    </div>
+                    
+                    <h3 className="font-display text-lg font-bold mb-2">{opp.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{opp.organization}</p>
+                    <p className="text-sm mb-4">{opp.description}</p>
+                    
+                    <div className="space-y-2 mb-4 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span>Deadline: {opp.deadline}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span>{opp.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-success font-medium">
+                        <DollarSign className="h-4 w-4" />
+                        <span>{opp.reward}</span>
+                      </div>
+                    </div>
+                    
+                    <Button className="w-full gap-2" asChild>
+                      <a href={opp.link} target="_blank" rel="noopener noreferrer">
+                        Apply Now
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

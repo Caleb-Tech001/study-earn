@@ -13,6 +13,7 @@ import {
   Users,
   ShoppingBag,
   MessageSquare,
+  Gift,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -132,6 +133,15 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </Sheet>
 
             <div className="ml-auto flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/learner/referral')}
+                className="relative"
+                title="Referral Program"
+              >
+                <Gift className="h-5 w-5" />
+              </Button>
               <NotificationDropdown />
               <CartDropdown />
 
