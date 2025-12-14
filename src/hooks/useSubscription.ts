@@ -16,6 +16,7 @@ export const SUBSCRIPTION_TIERS = {
     name: 'Free',
     price: 0,
     priceId: null,
+    productId: null,
     features: [
       'Access to free courses',
       'Community forum access',
@@ -25,8 +26,9 @@ export const SUBSCRIPTION_TIERS = {
   },
   basic: {
     name: 'Basic',
-    price: 9.99,
-    priceId: 'price_basic_monthly', // Replace with actual Stripe price ID
+    price: 19.99,
+    priceId: 'price_1Se4QTRwJ0QGMzGgebNgPFjL',
+    productId: 'prod_TbEm4Avua126as',
     features: [
       'All Free features',
       'Access to all courses',
@@ -38,7 +40,8 @@ export const SUBSCRIPTION_TIERS = {
   premium: {
     name: 'Premium',
     price: 29.99,
-    priceId: 'price_premium_monthly', // Replace with actual Stripe price ID
+    priceId: 'price_1Se4QCRwJ0QGMzGgT1wFLUE6',
+    productId: 'prod_TbEmUvivEorCu0',
     features: [
       'All Basic features',
       '5x points multiplier',
