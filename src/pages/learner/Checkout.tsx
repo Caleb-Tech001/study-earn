@@ -25,7 +25,10 @@ import {
   Download,
   Printer,
   Package,
+  Building2,
+  Truck,
 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { OrderReceipt } from '@/components/checkout/OrderReceipt';
 
 type CheckoutStep = 'cart' | 'shipping' | 'payment' | 'confirmation';
@@ -41,7 +44,10 @@ interface ShippingInfo {
   country: string;
 }
 
+type PaymentMethod = 'card' | 'bank_transfer' | 'pay_on_delivery';
+
 interface PaymentInfo {
+  method: PaymentMethod;
   cardNumber: string;
   cardName: string;
   expiryDate: string;
@@ -88,6 +94,7 @@ const Checkout = () => {
   });
 
   const [payment, setPayment] = useState<PaymentInfo>({
+    method: 'card',
     cardNumber: '',
     cardName: '',
     expiryDate: '',
@@ -155,13 +162,15 @@ const Checkout = () => {
         }
         return true;
       case 'payment':
-        if (!payment.cardNumber || !payment.cardName || !payment.expiryDate || !payment.cvv) {
-          toast({
-            title: 'Missing Payment Info',
-            description: 'Please fill in all payment details.',
-            variant: 'destructive',
-          });
-          return false;
+        if (payment.method === 'card') {
+          if (!payment.cardNumber || !payment.cardName || !payment.expiryDate || !payment.cvv) {
+            toast({
+              title: 'Missing Payment Info',
+              description: 'Please fill in all card details.',
+              variant: 'destructive',
+            });
+            return false;
+          }
         }
         return true;
       default:
@@ -480,59 +489,160 @@ const Checkout = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="cardNumber">Card Number *</Label>
-                <Input
-                  id="cardNumber"
-                  value={payment.cardNumber}
-                  onChange={(e) => setPayment(prev => ({ 
-                    ...prev, 
-                    cardNumber: formatCardNumber(e.target.value) 
-                  }))}
-                  placeholder="4242 4242 4242 4242"
-                  maxLength={19}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardName">Name on Card *</Label>
-                <Input
-                  id="cardName"
-                  value={payment.cardName}
-                  onChange={(e) => setPayment(prev => ({ ...prev, cardName: e.target.value }))}
-                  placeholder="JOHN DOE"
-                />
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="expiryDate">Expiry Date *</Label>
-                  <Input
-                    id="expiryDate"
-                    value={payment.expiryDate}
-                    onChange={(e) => setPayment(prev => ({ 
-                      ...prev, 
-                      expiryDate: formatExpiryDate(e.target.value) 
-                    }))}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                  />
+            {/* Payment Method Selection */}
+            <div className="mb-6">
+              <Label className="mb-3 block text-base font-semibold">Select Payment Method</Label>
+              <RadioGroup
+                value={payment.method}
+                onValueChange={(value: PaymentMethod) => setPayment(prev => ({ ...prev, method: value }))}
+                className="grid gap-3"
+              >
+                {/* Card Payment */}
+                <div className={`flex items-center gap-4 rounded-lg border-2 p-4 transition-all cursor-pointer ${
+                  payment.method === 'card' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                }`}>
+                  <RadioGroupItem value="card" id="card" />
+                  <Label htmlFor="card" className="flex flex-1 cursor-pointer items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Card Payment</p>
+                      <p className="text-sm text-muted-foreground">Pay with debit or credit card</p>
+                    </div>
+                  </Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cvv">CVV *</Label>
-                  <Input
-                    id="cvv"
-                    type="password"
-                    value={payment.cvv}
-                    onChange={(e) => setPayment(prev => ({ 
-                      ...prev, 
-                      cvv: e.target.value.replace(/\D/g, '').slice(0, 4) 
-                    }))}
-                    placeholder="***"
-                    maxLength={4}
-                  />
+
+                {/* Bank Transfer */}
+                <div className={`flex items-center gap-4 rounded-lg border-2 p-4 transition-all cursor-pointer ${
+                  payment.method === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                }`}>
+                  <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                  <Label htmlFor="bank_transfer" className="flex flex-1 cursor-pointer items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+                      <Building2 className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Bank Transfer</p>
+                      <p className="text-sm text-muted-foreground">Pay via direct bank transfer</p>
+                    </div>
+                  </Label>
                 </div>
-              </div>
+
+                {/* Pay on Delivery */}
+                <div className={`flex items-center gap-4 rounded-lg border-2 p-4 transition-all cursor-pointer ${
+                  payment.method === 'pay_on_delivery' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                }`}>
+                  <RadioGroupItem value="pay_on_delivery" id="pay_on_delivery" />
+                  <Label htmlFor="pay_on_delivery" className="flex flex-1 cursor-pointer items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
+                      <Truck className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Pay on Delivery</p>
+                      <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
+
+            {/* Card Details - Only show if card is selected */}
+            {payment.method === 'card' && (
+              <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold">Card Information</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="cardNumber">Card Number *</Label>
+                  <Input
+                    id="cardNumber"
+                    value={payment.cardNumber}
+                    onChange={(e) => setPayment(prev => ({ 
+                      ...prev, 
+                      cardNumber: formatCardNumber(e.target.value) 
+                    }))}
+                    placeholder="4242 4242 4242 4242"
+                    maxLength={19}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardName">Name on Card *</Label>
+                  <Input
+                    id="cardName"
+                    value={payment.cardName}
+                    onChange={(e) => setPayment(prev => ({ ...prev, cardName: e.target.value }))}
+                    placeholder="JOHN DOE"
+                  />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiryDate">Expiry Date *</Label>
+                    <Input
+                      id="expiryDate"
+                      value={payment.expiryDate}
+                      onChange={(e) => setPayment(prev => ({ 
+                        ...prev, 
+                        expiryDate: formatExpiryDate(e.target.value) 
+                      }))}
+                      placeholder="MM/YY"
+                      maxLength={5}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv">CVV *</Label>
+                    <Input
+                      id="cvv"
+                      type="password"
+                      value={payment.cvv}
+                      onChange={(e) => setPayment(prev => ({ 
+                        ...prev, 
+                        cvv: e.target.value.replace(/\D/g, '').slice(0, 4) 
+                      }))}
+                      placeholder="***"
+                      maxLength={4}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bank Transfer Instructions */}
+            {payment.method === 'bank_transfer' && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30">
+                <h3 className="mb-3 font-semibold text-blue-800 dark:text-blue-200">Bank Transfer Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bank Name:</span>
+                    <span className="font-medium">First Bank Nigeria</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Account Number:</span>
+                    <span className="font-medium">3012345678</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Account Name:</span>
+                    <span className="font-medium">StudyEarn Ltd</span>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Please transfer the exact amount and use your order ID as payment reference. 
+                  Your order will be processed once payment is confirmed (within 24 hours).
+                </p>
+              </div>
+            )}
+
+            {/* Pay on Delivery Info */}
+            {payment.method === 'pay_on_delivery' && (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/30">
+                <h3 className="mb-2 font-semibold text-green-800 dark:text-green-200">Pay on Delivery</h3>
+                <p className="text-sm text-muted-foreground">
+                  You will pay <span className="font-bold text-foreground">${total.toFixed(2)}</span> when 
+                  your order is delivered. Please have the exact amount ready. We accept cash and POS payments.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Note: A verification call may be made before dispatch.
+                </p>
+              </div>
+            )}
 
             <p className="mt-4 text-sm text-muted-foreground">
               🔒 Your payment information is encrypted and secure
