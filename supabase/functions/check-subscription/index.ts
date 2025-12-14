@@ -83,9 +83,10 @@ serve(async (req) => {
       const priceId = subscription.items.data[0].price.id;
       const priceAmount = subscription.items.data[0].price.unit_amount || 0;
       
+      // Basic: $19.99 (1999 cents), Premium: $29.99 (2999 cents)
       if (priceAmount >= 2999) {
         plan = "premium";
-      } else if (priceAmount >= 999) {
+      } else if (priceAmount >= 1999) {
         plan = "basic";
       }
       logStep("Determined subscription plan", { plan, priceAmount });
