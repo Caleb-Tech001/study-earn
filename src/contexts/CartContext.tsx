@@ -9,14 +9,17 @@ export interface CartItem {
   category: string;
   seller?: string;
   type: 'reward' | 'digital' | 'community';
+  quantity: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: CartItem) => void;
+  addToCart: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   getTotalCost: () => number;
+  getTotalItems: () => number;
   itemCount: number;
 }
 
@@ -26,20 +29,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
 
-  const addToCart = (item: CartItem) => {
-    const exists = items.find((i) => i.id === item.id);
-    if (exists) {
+  const addToCart = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
+    const existingIndex = items.findIndex((i) => i.id === item.id);
+    
+    if (existingIndex !== -1) {
+      // Update quantity if item exists
+      setItems((prev) => 
+        prev.map((i, index) => 
+          index === existingIndex 
+            ? { ...i, quantity: i.quantity + quantity }
+            : i
+        )
+      );
       toast({
-        title: 'Already in Cart',
-        description: `${item.title} is already in your cart`,
+        title: 'Cart Updated 🛒',
+        description: `Added ${quantity} more of ${item.title} to your cart`,
       });
-      return;
+    } else {
+      // Add new item
+      setItems((prev) => [...prev, { ...item, quantity }]);
+      toast({
+        title: 'Added to Cart 🛒',
+        description: `${item.title} has been added to your cart`,
+      });
     }
-    setItems((prev) => [...prev, item]);
-    toast({
-      title: 'Added to Cart 🛒',
-      description: `${item.title} has been added to your cart`,
-    });
   };
 
   const removeFromCart = (id: string) => {
@@ -50,12 +63,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity < 1) {
+      removeFromCart(id);
+      return;
+    }
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity } : item
+      )
+    );
+  };
+
   const clearCart = () => {
     setItems([]);
   };
 
   const getTotalCost = () => {
-    return items.reduce((total, item) => total + item.cost, 0);
+    return items.reduce((total, item) => total + (item.cost * item.quantity), 0);
+  };
+
+  const getTotalItems = () => {
+    return items.reduce((total, item) => total + item.quantity, 0);
   };
 
   return (
@@ -64,8 +93,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         items,
         addToCart,
         removeFromCart,
+        updateQuantity,
         clearCart,
         getTotalCost,
+        getTotalItems,
         itemCount: items.length,
       }}
     >

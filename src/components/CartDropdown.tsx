@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ShoppingCart, Trash2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ShoppingCart, Trash2, X, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,36 +13,20 @@ import {
 } from '@/components/ui/sheet';
 import { useCart } from '@/contexts/CartContext';
 import { useWallet } from '@/contexts/WalletContext';
-import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 
 export const CartDropdown = () => {
-  const { items, removeFromCart, clearCart, getTotalCost, itemCount } = useCart();
-  const { balance, deductBalance } = useWallet();
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { items, removeFromCart, updateQuantity, clearCart, getTotalCost, getTotalItems } = useCart();
+  const { balance } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleCheckout = () => {
-    if (items.length === 0) {
-      toast({
-        title: 'Cart is Empty',
-        description: 'Add items to your cart before checking out',
-        variant: 'destructive',
-      });
-      return;
-    }
+  const totalItems = getTotalItems();
+  const totalCost = getTotalCost();
 
-    const totalCost = getTotalCost();
-    const success = deductBalance(totalCost);
-    
-    if (success) {
-      toast({
-        title: 'Checkout Successful! 🎉',
-        description: `You've purchased ${items.length} items for $${totalCost.toFixed(2)}`,
-      });
-      clearCart();
-      setIsOpen(false);
-    }
+  const handleCheckout = () => {
+    setIsOpen(false);
+    navigate('/learner/checkout');
   };
 
   return (
@@ -49,12 +34,12 @@ export const CartDropdown = () => {
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
-          {itemCount > 0 && (
+          {totalItems > 0 && (
             <Badge
               variant="destructive"
               className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
             >
-              {itemCount}
+              {totalItems > 99 ? '99+' : totalItems}
             </Badge>
           )}
         </Button>
@@ -63,7 +48,7 @@ export const CartDropdown = () => {
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
-            Your Cart ({itemCount})
+            Your Cart ({totalItems} {totalItems === 1 ? 'item' : 'items'})
           </SheetTitle>
         </SheetHeader>
 
@@ -81,7 +66,7 @@ export const CartDropdown = () => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-start gap-3 rounded-lg border p-3"
                 >
                   <div className="flex-1">
                     <p className="font-medium">{item.title}</p>
@@ -91,17 +76,41 @@ export const CartDropdown = () => {
                         by {item.seller}
                       </p>
                     )}
+                    <p className="mt-1 text-sm text-primary">${item.cost.toFixed(2)} each</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-primary">${item.cost}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="font-bold text-primary">
+                      ${(item.cost * item.quantity).toFixed(2)}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center text-sm font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -115,20 +124,15 @@ export const CartDropdown = () => {
             <SheetFooter className="mt-4 flex-col gap-3">
               <div className="flex w-full flex-col gap-1">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Your Balance:</span>
+                  <span>Your Wallet Balance:</span>
                   <span>${balance.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg">
-                  <span className="font-medium">Total:</span>
-                  <span className={`font-bold ${getTotalCost() > balance ? 'text-destructive' : 'text-primary'}`}>
-                    ${getTotalCost().toFixed(2)}
+                  <span className="font-medium">Subtotal:</span>
+                  <span className="font-bold text-primary">
+                    ${totalCost.toFixed(2)}
                   </span>
                 </div>
-                {getTotalCost() > balance && (
-                  <p className="text-xs text-destructive">
-                    Insufficient balance. You need ${(getTotalCost() - balance).toFixed(2)} more.
-                  </p>
-                )}
               </div>
               <div className="flex w-full gap-2">
                 <Button variant="outline" className="flex-1" onClick={clearCart}>
