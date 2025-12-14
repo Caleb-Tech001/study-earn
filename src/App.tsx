@@ -44,7 +44,7 @@ import Community from "./pages/learner/Community";
 import Referral from "./pages/learner/Referral";
 import Profile from "./pages/learner/Profile";
 import Settings from "./pages/learner/Settings";
-
+import Checkout from "./pages/learner/Checkout";
 // Instructor Pages
 import InstructorDashboard from "./pages/instructor/InstructorDashboard";
 
@@ -169,6 +169,14 @@ const App = () => (
                     element={
                       <ProtectedRoute allowedRoles={['learner']}>
                         <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/learner/checkout"
+                    element={
+                      <ProtectedRoute allowedRoles={['learner']}>
+                        <Checkout />
                       </ProtectedRoute>
                     }
                   />

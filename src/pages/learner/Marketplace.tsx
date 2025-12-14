@@ -187,7 +187,7 @@ const Marketplace = () => {
   ];
 
   const handleAddToCart = (item: any, type: 'reward' | 'digital' | 'community') => {
-    const cartItem: CartItem = {
+    addToCart({
       id: item.id,
       title: item.title,
       description: item.description,
@@ -195,8 +195,7 @@ const Marketplace = () => {
       category: item.category,
       seller: item.seller,
       type,
-    };
-    addToCart(cartItem);
+    });
   };
 
   const handleBuyNow = (item: any) => {
