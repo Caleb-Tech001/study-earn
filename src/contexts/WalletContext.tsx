@@ -94,11 +94,39 @@ const initialTransactions: Transaction[] = [
   },
 ];
 
+const WALLET_STORAGE_KEY = 'studyearn_wallet';
+const TRANSACTIONS_STORAGE_KEY = 'studyearn_transactions';
+
+// Load initial state from localStorage
+const loadWalletState = () => {
+  try {
+    const savedBalance = localStorage.getItem(WALLET_STORAGE_KEY);
+    const savedTransactions = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
+    return {
+      balance: savedBalance ? parseFloat(savedBalance) : 0,
+      transactions: savedTransactions ? JSON.parse(savedTransactions) : []
+    };
+  } catch {
+    return { balance: 0, transactions: [] };
+  }
+};
+
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
-  const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const initialState = loadWalletState();
+  const [balance, setBalance] = useState(initialState.balance);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialState.transactions);
   const [hasProcessedSignupBonus, setHasProcessedSignupBonus] = useState(false);
   const { toast } = useToast();
+
+  // Persist balance to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(WALLET_STORAGE_KEY, balance.toString());
+  }, [balance]);
+
+  // Persist transactions to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+  }, [transactions]);
 
   // Process pending signup bonus on mount
   useEffect(() => {
@@ -110,12 +138,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         const bonusData = JSON.parse(pendingBonus);
         const totalBonus = (bonusData.baseBonus || 0.05) + (bonusData.referralBonus || 0);
         
-        // Add the bonus to balance
-        setBalance(totalBonus);
+        // Add the bonus to balance (add to existing, not replace)
+        setBalance(prev => prev + totalBonus);
         
         // Create welcome transaction
         const signupTransaction: Transaction = {
-          id: 'signup_bonus',
+          id: 'signup_bonus_' + Date.now(),
           type: 'earn',
           description: bonusData.referralCode 
             ? `Welcome Bonus + Referral (${bonusData.referralCode})` 
@@ -126,7 +154,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           date: new Date().toISOString(),
         };
         
-        setTransactions([signupTransaction]);
+        setTransactions(prev => [signupTransaction, ...prev]);
         
         // Show toast notification
         setTimeout(() => {

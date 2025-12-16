@@ -66,10 +66,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Get referral bonus amount if valid code
       const { data: refData } = await supabase
         .from('referral_codes')
-        .select('bonus_amount, usage_count')
-        .ilike('code', referralCode)
+        .select('id, code, bonus_amount, usage_count')
+        .ilike('code', referralCode.trim())
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
       
       if (refData) {
         // Store signup bonus info in localStorage for WalletContext to process
@@ -77,15 +77,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           userId: data.user.id,
           baseBonus: 0.05,
           referralBonus: Number(refData.bonus_amount),
-          referralCode: referralCode,
+          referralCode: refData.code, // Use the actual code from DB
           timestamp: Date.now()
         }));
         
-        // Increment usage count
+        // Increment usage count using the exact code from database
         await supabase
           .from('referral_codes')
           .update({ usage_count: (refData.usage_count || 0) + 1 })
-          .ilike('code', referralCode);
+          .eq('id', refData.id);
       } else {
         // No valid referral, just base bonus
         localStorage.setItem('pending_signup_bonus', JSON.stringify({
