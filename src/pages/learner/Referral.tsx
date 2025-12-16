@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
   Gift, 
@@ -29,8 +30,62 @@ const Referral = () => {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  const referralCode = user?.id?.substring(0, 8).toUpperCase() || 'STUDY2024';
-  const referralLink = `https://studyearn.app/signup?ref=${referralCode}`;
+  const fallbackReferralCode = user?.id?.substring(0, 8).toUpperCase() || 'STUDY2024';
+  const [referralCode, setReferralCode] = useState(fallbackReferralCode);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fallback = user.id?.substring(0, 8).toUpperCase() || 'STUDY2024';
+    setReferralCode(fallback);
+
+    let cancelled = false;
+
+    const resolveReferralCode = async () => {
+      // Force for this account only (email or user id)
+      if (
+        user.id === '6a45c27a-8874-48ce-8a52-ea6232730c90' ||
+        user.email?.toLowerCase() === 'oladepocaleb2020@gmail.com'
+      ) {
+        setReferralCode('CalebTech');
+        return;
+      }
+
+      const candidates: string[] = [];
+
+      // Standard format: FirstNameTech (only if it exists in referral_codes)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const firstName = profile?.full_name?.trim().split(/\s+/)[0];
+      if (firstName) candidates.push(`${firstName}Tech`);
+
+      for (const code of candidates) {
+        const { data: row } = await supabase
+          .from('referral_codes')
+          .select('code')
+          .ilike('code', code)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (row?.code) {
+          if (!cancelled) setReferralCode(row.code);
+          return;
+        }
+      }
+    };
+
+    resolveReferralCode();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, user?.email]);
+
+  const referralLink = `https://studyearn.app/signup?ref=${encodeURIComponent(referralCode)}`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
