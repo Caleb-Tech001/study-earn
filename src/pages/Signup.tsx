@@ -98,7 +98,7 @@ const Signup = () => {
         }
       } else {
         // Calculate bonus amount for toast message
-        const baseBonus = 0.05;
+        const baseBonus = 100;
         const referralBonus = referralValid ? 1.00 : 0;
         const totalBonus = baseBonus + referralBonus;
         
@@ -285,7 +285,7 @@ const Signup = () => {
                   <p className="mt-1 text-xs text-destructive">Invalid referral code</p>
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">
-                  New users get $0.05 signup bonus. With valid referral: $1.05 total!
+                  New users get $100 signup bonus + 100,000 points. With valid referral: $101 total!
                 </p>
               </div>
 
