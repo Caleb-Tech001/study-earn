@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { useSavedBankAccounts, SavedBankAccount, SavedCryptoWallet } from '@/hooks/useSavedBankAccounts';
-import { nigerianBanks, cryptoExchanges, networkFees, usdToNaira } from '@/utils/bankData';
+import { nigerianBanks, cryptoExchanges, usdToNaira } from '@/utils/bankData';
 import { Building2, Bitcoin, ArrowRight, Check, Loader2, Plus, Trash2, Star } from 'lucide-react';
 
 interface WithdrawalModalProps {
@@ -23,6 +24,7 @@ interface WithdrawalModalProps {
 export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps) => {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
+  const { processWithdrawal } = useWallet();
   const {
     savedAccounts,
     savedWallets,
@@ -58,10 +60,10 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
   const [walletAddress, setWalletAddress] = useState('');
   const [walletLabel, setWalletLabel] = useState('');
 
-  const withdrawalFee = withdrawType === 'bank' ? 1.50 : networkFees[selectedNetwork] || 0;
+  // No fees for withdrawals
   const amountNum = parseFloat(amount) || 0;
   const nairaEquivalent = amountNum * usdToNaira;
-  const finalAmount = amountNum - withdrawalFee;
+  const finalAmount = amountNum; // No fee deduction
 
   // Auto-select default account on open
   useState(() => {
@@ -175,6 +177,13 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
 
     setIsLoading(true);
     setTimeout(() => {
+      // Process the withdrawal - deduct balance and add transaction
+      const description = withdrawType === 'bank' 
+        ? `Bank Transfer - ${selectedSavedAccount?.bankName || nigerianBanks.find(b => b.code === selectedBank)?.name || 'Bank'}`
+        : `Crypto - ${selectedNetwork.toUpperCase()}`;
+      
+      processWithdrawal(amountNum, description);
+      
       setIsLoading(false);
       setStep(3);
       
@@ -560,7 +569,7 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
                                 .find(ex => ex.code === selectedExchange)
                                 ?.networks.map((network) => (
                                   <SelectItem key={network} value={network}>
-                                    {network} (Fee: ${networkFees[network]})
+                                    {network}
                                   </SelectItem>
                                 ))}
                             </SelectContent>
@@ -634,10 +643,6 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
                       <div className="flex justify-between text-sm">
                         <span>Amount</span>
                         <span>${amountNum.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Fee</span>
-                        <span className="text-destructive">-${withdrawalFee.toFixed(2)}</span>
                       </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
                         <span>You'll receive</span>

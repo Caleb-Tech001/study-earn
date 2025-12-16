@@ -30,14 +30,20 @@ const Wallet = () => {
   const { toast } = useToast();
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
   const { rate: dollarToNaira, lastUpdated, isLoading, change24h, refresh } = useExchangeRate();
-  const { balance, pointsBalance } = useWallet();
+  const { balance, pointsBalance, transactions } = useWallet();
   
-  const totalEarned = 1250.0;
-  const totalWithdrawn = 800.0;
-  const totalRedeemed = 204.5;
+  const totalEarned = transactions
+    .filter(t => t.amount > 0)
+    .reduce((sum, t) => sum + t.amount, 0);
+  const totalWithdrawn = Math.abs(transactions
+    .filter(t => t.type === 'withdraw')
+    .reduce((sum, t) => sum + t.amount, 0));
+  const totalRedeemed = Math.abs(transactions
+    .filter(t => t.type === 'redeem')
+    .reduce((sum, t) => sum + t.amount, 0));
 
   // Exchange rates
-  const pointsToDollar = 1000; // 1000 points = $1
+  const pointsToDollar = 100; // 100 points = $1
   
   const nairaBalance = balance * dollarToNaira;
 
@@ -47,99 +53,6 @@ const Wallet = () => {
       description: "Browse available rewards in the Marketplace to redeem your balance.",
     });
   };
-
-  const transactions = [
-    {
-      id: '1',
-      type: 'earn',
-      description: 'Completed Python Basics Quiz',
-      amount: 15.0,
-      points: 15000,
-      status: 'completed',
-      date: '2025-01-15T10:30:00',
-    },
-    {
-      id: '2',
-      type: 'earn',
-      description: 'Completed JavaScript Advanced Module',
-      amount: 35.0,
-      points: 35000,
-      status: 'completed',
-      date: '2024-12-28T14:20:00',
-    },
-    {
-      id: '3',
-      type: 'redeem',
-      description: 'Amazon Gift Card - $50',
-      amount: -50.0,
-      points: -50000,
-      status: 'completed',
-      date: '2024-12-20T15:20:00',
-    },
-    {
-      id: '4',
-      type: 'earn',
-      description: '7-Day Streak Bonus',
-      amount: 25.0,
-      points: 25000,
-      status: 'completed',
-      date: '2024-12-14T00:00:00',
-    },
-    {
-      id: '5',
-      type: 'withdraw',
-      description: 'Bank Transfer - OPay',
-      amount: -100.0,
-      points: -100000,
-      status: 'pending',
-      date: '2024-11-25T14:15:00',
-    },
-    {
-      id: '6',
-      type: 'earn',
-      description: 'Completed Web Dev Module 3',
-      amount: 40.0,
-      points: 40000,
-      status: 'completed',
-      date: '2024-11-18T18:45:00',
-    },
-    {
-      id: '7',
-      type: 'referral',
-      description: 'Referral Bonus - Sarah J.',
-      amount: 20.0,
-      points: 20000,
-      status: 'completed',
-      date: '2024-10-30T09:30:00',
-    },
-    {
-      id: '8',
-      type: 'withdraw',
-      description: 'Crypto - USDT (TRC20)',
-      amount: -50.0,
-      points: -50000,
-      status: 'completed',
-      date: '2024-10-15T16:00:00',
-    },
-    {
-      id: '9',
-      type: 'conversion',
-      description: 'Points Conversion',
-      amount: 25.0,
-      points: 25000,
-      status: 'completed',
-      date: '2024-09-28T11:45:00',
-    },
-    {
-      id: '10',
-      type: 'earn',
-      description: 'Monthly Achievement Bonus',
-      amount: 50.0,
-      points: 50000,
-      status: 'completed',
-      date: '2024-09-01T00:00:00',
-    },
-  ];
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
