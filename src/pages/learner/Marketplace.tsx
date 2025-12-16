@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useCart, CartItem } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/CartContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { UploadProductModal } from '@/components/marketplace/UploadProductModal';
+import { RedeemModal } from '@/components/marketplace/RedeemModal';
 import {
   ShoppingBag,
   Gift,
@@ -29,9 +31,11 @@ import {
 const Marketplace = () => {
   const { toast } = useToast();
   const { addToCart } = useCart();
-  const walletBalance = 245.5;
+  const { balance, deductBalance, addTransaction } = useWallet();
   const [activeTab, setActiveTab] = useState('rewards');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [selectedRedeemItem, setSelectedRedeemItem] = useState<any>(null);
   const [userListedProducts, setUserListedProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -198,8 +202,21 @@ const Marketplace = () => {
     });
   };
 
-  const handleBuyNow = (item: any) => {
-    if (walletBalance >= item.cost) {
+  const handleRedeemReward = (item: any) => {
+    setSelectedRedeemItem(item);
+    setShowRedeemModal(true);
+  };
+
+  const handleBuyDigital = (item: any) => {
+    if (balance >= item.cost) {
+      deductBalance(item.cost);
+      addTransaction({
+        type: 'redeem',
+        description: `Purchased: ${item.title}`,
+        amount: -item.cost,
+        points: -Math.round(item.cost * 1000),
+        status: 'completed',
+      });
       toast({
         title: 'Purchase Successful! 🎉',
         description: `You've purchased "${item.title}" for $${item.cost}`,
@@ -207,7 +224,7 @@ const Marketplace = () => {
     } else {
       toast({
         title: 'Insufficient Balance',
-        description: `You need $${(item.cost - walletBalance).toFixed(2)} more to purchase this item.`,
+        description: `You need $${(item.cost - balance).toFixed(2)} more to purchase this item.`,
         variant: 'destructive',
       });
     }
@@ -267,7 +284,7 @@ const Marketplace = () => {
           </div>
           <Card className="p-4">
             <p className="text-sm text-muted-foreground">Your Balance</p>
-            <p className="font-display text-2xl font-bold">${walletBalance}</p>
+            <p className="font-display text-2xl font-bold">${balance.toFixed(2)}</p>
           </Card>
         </div>
 
@@ -329,8 +346,8 @@ const Marketplace = () => {
                         <ShoppingCart className="h-4 w-4" />
                       </Button>
                       <Button 
-                        onClick={() => handleBuyNow(reward)}
-                        disabled={walletBalance < reward.cost}
+                        onClick={() => handleRedeemReward(reward)}
+                        disabled={balance < reward.cost}
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         Redeem
@@ -375,8 +392,8 @@ const Marketplace = () => {
                       </Button>
                       <Button 
                         size="sm"
-                        onClick={() => handleBuyNow(product)}
-                        disabled={walletBalance < product.cost}
+                        onClick={() => handleBuyDigital(product)}
+                        disabled={balance < product.cost}
                       >
                         Buy
                       </Button>
@@ -473,8 +490,8 @@ const Marketplace = () => {
                         <ShoppingCart className="h-4 w-4" />
                       </Button>
                       <Button 
-                        onClick={() => handleBuyNow(product)}
-                        disabled={walletBalance < product.cost}
+                        onClick={() => handleBuyDigital(product)}
+                        disabled={balance < product.cost}
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         Buy
@@ -493,6 +510,15 @@ const Marketplace = () => {
         open={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         onProductAdded={handleProductAdded}
+      />
+
+      <RedeemModal
+        open={showRedeemModal}
+        onClose={() => {
+          setShowRedeemModal(false);
+          setSelectedRedeemItem(null);
+        }}
+        item={selectedRedeemItem}
       />
     </DashboardLayout>
   );
