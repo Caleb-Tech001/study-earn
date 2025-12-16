@@ -36,9 +36,32 @@ const getStorageKeys = (userId: string) => ({
   bonusProcessed: `studyearn_bonus_processed_${userId}`
 });
 
+// Migrate old generic storage to user-specific storage
+const migrateOldStorage = (userId: string) => {
+  const keys = getStorageKeys(userId);
+  const userWalletExists = localStorage.getItem(keys.wallet);
+  
+  // Only migrate if user doesn't have user-specific data yet
+  if (!userWalletExists) {
+    const oldBalance = localStorage.getItem('studyearn_wallet');
+    const oldTransactions = localStorage.getItem('studyearn_transactions');
+    
+    if (oldBalance) {
+      localStorage.setItem(keys.wallet, oldBalance);
+      // Don't remove old data yet in case other users need it
+    }
+    if (oldTransactions) {
+      localStorage.setItem(keys.transactions, oldTransactions);
+    }
+  }
+};
+
 // Load wallet state for specific user
 const loadWalletState = (userId: string | null) => {
   if (!userId) return { balance: 0, transactions: [], bonusProcessed: false };
+  
+  // Run migration for this user
+  migrateOldStorage(userId);
   
   try {
     const keys = getStorageKeys(userId);
