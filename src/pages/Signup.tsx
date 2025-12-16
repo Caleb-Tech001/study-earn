@@ -8,7 +8,8 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2, Gift, CheckCircle2 } from 'lucide-react';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
@@ -25,6 +28,23 @@ const Signup = () => {
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   
   const selectedRole = (location.state?.role as string) || null;
+
+  // Validate referral code
+  const validateReferralCode = async (code: string) => {
+    if (!code.trim()) {
+      setReferralValid(null);
+      return;
+    }
+    
+    const { data } = await supabase
+      .from('referral_codes')
+      .select('code')
+      .ilike('code', code.trim())
+      .eq('is_active', true)
+      .single();
+    
+    setReferralValid(!!data);
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +79,8 @@ const Signup = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await signUp(email, password, selectedRole);
+      // Pass referral code in metadata
+      const { error } = await signUp(email, password, selectedRole, referralCode.trim() || undefined);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -76,11 +97,16 @@ const Signup = () => {
           });
         }
       } else {
+        // Calculate bonus amount for toast message
+        const baseBonus = 0.05;
+        const referralBonus = referralValid ? 1.00 : 0;
+        const totalBonus = baseBonus + referralBonus;
+        
         toast({
-          title: 'Welcome to StudyEarn!',
-          description: 'Your account has been created successfully.',
+          title: 'Welcome to StudyEarn! 🎉',
+          description: `Your account has been created. You received $${totalBonus.toFixed(2)} signup bonus!`,
         });
-        navigate('/profile-setup', { state: { role: selectedRole } });
+        navigate('/profile-setup', { state: { role: selectedRole, referralCode: referralCode.trim() } });
       }
     } catch (error: any) {
       toast({
@@ -227,6 +253,40 @@ const Signup = () => {
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+              </div>
+
+              {/* Referral Code */}
+              <div>
+                <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                <div className="relative mt-2">
+                  <Gift className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="referralCode"
+                    type="text"
+                    placeholder="Enter referral code for bonus"
+                    value={referralCode}
+                    onChange={(e) => {
+                      setReferralCode(e.target.value);
+                      validateReferralCode(e.target.value);
+                    }}
+                    className={`pl-10 pr-10 ${
+                      referralValid === true ? 'border-success' : 
+                      referralValid === false ? 'border-destructive' : ''
+                    }`}
+                  />
+                  {referralValid === true && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-success" />
+                  )}
+                </div>
+                {referralValid === true && (
+                  <p className="mt-1 text-xs text-success">Valid code! You'll get $1 bonus!</p>
+                )}
+                {referralValid === false && (
+                  <p className="mt-1 text-xs text-destructive">Invalid referral code</p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  New users get $0.05 signup bonus. With valid referral: $1.05 total!
+                </p>
               </div>
 
               {/* Terms checkbox */}

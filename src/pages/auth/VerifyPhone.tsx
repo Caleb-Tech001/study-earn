@@ -118,11 +118,7 @@ const VerifyPhone = () => {
       const tempEmail = `${phone_number.replace(/\+/g, '')}@phone.studyearn.app`;
       const tempPassword = crypto.randomUUID();
 
-      const { error: signUpError } = await signUp(tempEmail, tempPassword, role, {
-        phone_number,
-        full_name: '',
-        auth_method: 'phone'
-      });
+      const { error: signUpError } = await signUp(tempEmail, tempPassword, role);
 
       if (signUpError) {
         throw signUpError;

@@ -327,6 +327,33 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          bonus_amount: number
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          usage_count: number
+        }
+        Insert: {
+          bonus_amount?: number
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          usage_count?: number
+        }
+        Update: {
+          bonus_amount?: number
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          usage_count?: number
+        }
+        Relationships: []
+      }
       reply_votes: {
         Row: {
           created_at: string
@@ -358,6 +385,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signup_bonuses: {
+        Row: {
+          base_bonus: number
+          claimed: boolean
+          created_at: string
+          id: string
+          referral_bonus: number
+          referral_code: string | null
+          total_bonus: number | null
+          user_id: string
+        }
+        Insert: {
+          base_bonus?: number
+          claimed?: boolean
+          created_at?: string
+          id?: string
+          referral_bonus?: number
+          referral_code?: string | null
+          total_bonus?: number | null
+          user_id: string
+        }
+        Update: {
+          base_bonus?: number
+          claimed?: boolean
+          created_at?: string
+          id?: string
+          referral_bonus?: number
+          referral_code?: string | null
+          total_bonus?: number | null
+          user_id?: string
+        }
+        Relationships: []
       }
       support_tickets: {
         Row: {
