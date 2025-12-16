@@ -87,7 +87,7 @@ The project is production ready and can be deployed on platforms such as:
 
 - Vercel
 - Netlify
-- Any static hosting service that support SPA deployments
+- Any static hosting service supporting SPA deployments
 
 Vercel deployment requires no additional configuration beyond the default Vite settings.
 
