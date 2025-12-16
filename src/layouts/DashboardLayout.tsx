@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { CartDropdown } from '@/components/CartDropdown';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -133,6 +134,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </Sheet>
 
             <div className="ml-auto flex items-center gap-2">
+              <LanguageSelector />
               <Button 
                 variant="ghost" 
                 size="icon" 

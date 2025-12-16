@@ -9,6 +9,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { CommunityProvider } from "@/contexts/CommunityContext";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { AssistantProvider } from "@/contexts/AssistantContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { StudyEarnAssistant } from "@/components/assistant/StudyEarnAssistant";
 
@@ -67,9 +68,10 @@ const App = () => (
             <CartProvider>
               <WalletProvider>
                 <AssistantProvider>
-                  <CommunityProvider>
-                    <StudyEarnAssistant />
-                    <Routes>
+                  <LanguageProvider>
+                    <CommunityProvider>
+                      <StudyEarnAssistant />
+                      <Routes>
                   {/* Root & Public Routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/landing" element={<Landing />} />
@@ -211,10 +213,10 @@ const App = () => (
                     }
                   />
 
-                    {/* Catch-all route */}
-                    <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </CommunityProvider>
+                      <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </CommunityProvider>
+                  </LanguageProvider>
                 </AssistantProvider>
               </WalletProvider>
             </CartProvider>
