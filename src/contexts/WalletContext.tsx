@@ -39,6 +39,16 @@ const getStorageKeys = (userId: string) => ({
 // Migrate old generic storage to user-specific storage
 const migrateOldStorage = (userId: string) => {
   const keys = getStorageKeys(userId);
+  
+  // Special restoration for affected user - Caleb's account
+  const restoredKey = `studyearn_restored_${userId}`;
+  if (userId === '6a45c27a-8874-48ce-8a52-ea6232730c90' && !localStorage.getItem(restoredKey)) {
+    localStorage.setItem(keys.wallet, '300');
+    localStorage.setItem(keys.bonusProcessed, 'true');
+    localStorage.setItem(restoredKey, 'true');
+    return;
+  }
+  
   const userWalletExists = localStorage.getItem(keys.wallet);
   
   // Only migrate if user doesn't have user-specific data yet
@@ -48,7 +58,6 @@ const migrateOldStorage = (userId: string) => {
     
     if (oldBalance) {
       localStorage.setItem(keys.wallet, oldBalance);
-      // Don't remove old data yet in case other users need it
     }
     if (oldTransactions) {
       localStorage.setItem(keys.transactions, oldTransactions);
