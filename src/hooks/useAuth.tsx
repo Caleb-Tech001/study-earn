@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, role: string, metadata?: any) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, role: string, referralCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithProvider: (provider: 'google' | 'apple', role?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -46,20 +46,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, role: string, metadata: any = {}) => {
+  const signUp = async (email: string, password: string, role: string, referralCode?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           role,
-          ...metadata
+          referral_code: referralCode || null
         }
       }
     });
+
+    // If signup successful and we have a user, store referral info for later processing
+    if (!error && data.user && referralCode) {
+      // Get referral bonus amount if valid code
+      const { data: refData } = await supabase
+        .from('referral_codes')
+        .select('bonus_amount, usage_count')
+        .ilike('code', referralCode)
+        .eq('is_active', true)
+        .single();
+      
+      if (refData) {
+        // Store signup bonus info in localStorage for WalletContext to process
+        localStorage.setItem('pending_signup_bonus', JSON.stringify({
+          userId: data.user.id,
+          baseBonus: 0.05,
+          referralBonus: Number(refData.bonus_amount),
+          referralCode: referralCode,
+          timestamp: Date.now()
+        }));
+        
+        // Increment usage count
+        await supabase
+          .from('referral_codes')
+          .update({ usage_count: (refData.usage_count || 0) + 1 })
+          .ilike('code', referralCode);
+      } else {
+        // No valid referral, just base bonus
+        localStorage.setItem('pending_signup_bonus', JSON.stringify({
+          userId: data.user.id,
+          baseBonus: 0.05,
+          referralBonus: 0,
+          referralCode: null,
+          timestamp: Date.now()
+        }));
+      }
+    } else if (!error && data.user) {
+      // No referral code, just base bonus
+      localStorage.setItem('pending_signup_bonus', JSON.stringify({
+        userId: data.user.id,
+        baseBonus: 0.05,
+        referralBonus: 0,
+        referralCode: null,
+        timestamp: Date.now()
+      }));
+    }
     
     return { error };
   };

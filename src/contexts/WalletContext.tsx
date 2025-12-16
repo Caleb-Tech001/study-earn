@@ -95,9 +95,56 @@ const initialTransactions: Transaction[] = [
 ];
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
-  const [balance, setBalance] = useState(300);
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [hasProcessedSignupBonus, setHasProcessedSignupBonus] = useState(false);
   const { toast } = useToast();
+
+  // Process pending signup bonus on mount
+  useEffect(() => {
+    if (hasProcessedSignupBonus) return;
+    
+    const pendingBonus = localStorage.getItem('pending_signup_bonus');
+    if (pendingBonus) {
+      try {
+        const bonusData = JSON.parse(pendingBonus);
+        const totalBonus = (bonusData.baseBonus || 0.05) + (bonusData.referralBonus || 0);
+        
+        // Add the bonus to balance
+        setBalance(totalBonus);
+        
+        // Create welcome transaction
+        const signupTransaction: Transaction = {
+          id: 'signup_bonus',
+          type: 'earn',
+          description: bonusData.referralCode 
+            ? `Welcome Bonus + Referral (${bonusData.referralCode})` 
+            : 'Welcome Signup Bonus',
+          amount: totalBonus,
+          points: Math.round(totalBonus * POINTS_TO_DOLLAR),
+          status: 'completed',
+          date: new Date().toISOString(),
+        };
+        
+        setTransactions([signupTransaction]);
+        
+        // Show toast notification
+        setTimeout(() => {
+          toast({
+            title: '🎉 Welcome Bonus Received!',
+            description: `You received $${totalBonus.toFixed(2)} signup bonus!`,
+          });
+        }, 1000);
+        
+        // Remove from localStorage
+        localStorage.removeItem('pending_signup_bonus');
+        setHasProcessedSignupBonus(true);
+      } catch (e) {
+        console.error('Failed to process signup bonus:', e);
+        localStorage.removeItem('pending_signup_bonus');
+      }
+    }
+  }, [hasProcessedSignupBonus, toast]);
 
   // Auto-complete pending withdrawals after 2 minutes
   useEffect(() => {
