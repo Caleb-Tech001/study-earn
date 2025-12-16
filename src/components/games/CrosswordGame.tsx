@@ -7,7 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useWallet } from '@/contexts/WalletContext';
-import { Trophy, Lightbulb, RotateCcw, Star, Zap } from 'lucide-react';
+import { useGameLimit } from '@/hooks/useGameLimit';
+import { Trophy, Lightbulb, RotateCcw, Star, Zap, Lock, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface CrosswordClue {
   id: number;
@@ -59,6 +61,7 @@ export const CrosswordGame = () => {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const { addPoints } = useWallet();
+  const { canPlay, remainingPlays, playsToday, maxPlays, recordPlay, plan, planName, isLoading: limitLoading } = useGameLimit();
   const [currentLevel, setCurrentLevel] = useState(0);
   const [clues, setClues] = useState<CrosswordClue[]>(puzzles[0].clues);
   const [selectedClue, setSelectedClue] = useState<CrosswordClue | null>(null);
@@ -66,6 +69,7 @@ export const CrosswordGame = () => {
   const [score, setScore] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [completedLevels, setCompletedLevels] = useState<number[]>([]);
+  const [hasStartedGame, setHasStartedGame] = useState(false);
 
   const puzzle = puzzles[currentLevel];
   const correctAnswers = clues.filter(c => c.userAnswer.toUpperCase() === c.answer).length;
@@ -76,6 +80,25 @@ export const CrosswordGame = () => {
     setSelectedClue(null);
     setInputValue('');
   }, [currentLevel]);
+
+  const handleStartGame = () => {
+    if (!canPlay) {
+      toast({
+        title: 'Daily Limit Reached',
+        description: `Upgrade your plan for more plays!`,
+        variant: 'destructive',
+      });
+      return;
+    }
+    recordPlay();
+    setHasStartedGame(true);
+    toast({
+      title: 'Game Started!',
+      description: remainingPlays === 'unlimited' 
+        ? 'You have unlimited plays!' 
+        : `${typeof remainingPlays === 'number' ? remainingPlays - 1 : remainingPlays} plays remaining today`,
+    });
+  };
 
   const handleSubmitAnswer = () => {
     if (!selectedClue || !inputValue.trim()) return;
@@ -165,8 +188,100 @@ export const CrosswordGame = () => {
 
   const isLevelComplete = correctAnswers === clues.length;
 
+  // Show loading state
+  if (limitLoading) {
+    return (
+      <Card className="border-2 p-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      </Card>
+    );
+  }
+
+  // Show start game or locked state
+  if (!hasStartedGame) {
+    return (
+      <Card className="border-2 p-6">
+        <div className="text-center py-8">
+          <div className={`mx-auto mb-4 h-16 w-16 rounded-full flex items-center justify-center ${canPlay ? 'bg-primary/10' : 'bg-muted'}`}>
+            {canPlay ? (
+              <Trophy className="h-8 w-8 text-primary" />
+            ) : (
+              <Lock className="h-8 w-8 text-muted-foreground" />
+            )}
+          </div>
+          
+          <h3 className="font-display text-2xl font-bold mb-2">
+            {canPlay ? 'Ready to Play?' : 'Daily Limit Reached'}
+          </h3>
+          
+          <p className="text-muted-foreground mb-4">
+            {canPlay 
+              ? `You have ${remainingPlays === 'unlimited' ? 'unlimited' : remainingPlays} ${remainingPlays === 1 ? 'play' : 'plays'} remaining today`
+              : `You've used all ${maxPlays} plays for today`
+            }
+          </p>
+
+          {/* Plan info badge */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <Badge variant="outline" className="gap-1">
+              {plan === 'premium' && <Crown className="h-3 w-3 text-accent" />}
+              {planName} Plan
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              • {maxPlays === Infinity ? 'Unlimited' : maxPlays} plays/day
+            </span>
+          </div>
+
+          {canPlay ? (
+            <Button size="lg" onClick={handleStartGame}>
+              <Zap className="mr-2 h-5 w-5" />
+              Start Game
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Upgrade to get more plays!
+              </p>
+              <div className="flex justify-center gap-2">
+                {plan === 'free' && (
+                  <Link to="/learner/settings">
+                    <Button variant="outline">
+                      <Crown className="mr-2 h-4 w-4" />
+                      Basic (4 plays/day)
+                    </Button>
+                  </Link>
+                )}
+                {plan !== 'premium' && (
+                  <Link to="/learner/settings">
+                    <Button className="bg-gradient-to-r from-accent to-primary">
+                      <Crown className="mr-2 h-4 w-4" />
+                      Premium (Unlimited)
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-2 p-6">
+      {/* Play count indicator */}
+      <div className="mb-4 flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+        <span className="text-muted-foreground">
+          Today's plays: {playsToday}/{maxPlays === Infinity ? '∞' : maxPlays}
+        </span>
+        <Badge variant="outline" className="gap-1">
+          {plan === 'premium' && <Crown className="h-3 w-3 text-accent" />}
+          {planName}
+        </Badge>
+      </div>
+
       <div className="mb-6 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
