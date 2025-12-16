@@ -27,16 +27,11 @@ export const LanguageSelector = () => {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" title="Change Language">
+        <Button variant="ghost" size="icon" title={`Language: ${currentLanguage.name}`}>
           {isTranslating ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <>
-              <Globe className="h-5 w-5" />
-              <span className="absolute -bottom-0.5 -right-0.5 text-xs">
-                {currentLanguage.flag}
-              </span>
-            </>
+            <Globe className="h-5 w-5" />
           )}
         </Button>
       </DropdownMenuTrigger>
