@@ -165,7 +165,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         // Only process if this bonus is for current user
         if (bonusData.userId !== userId) return;
         
-        const totalBonus = (bonusData.baseBonus || 0.05) + (bonusData.referralBonus || 0);
+        const totalBonus = (bonusData.baseBonus || 100) + (bonusData.referralBonus || 0);
         
         // Add the bonus to balance
         setBalance(prev => prev + totalBonus);

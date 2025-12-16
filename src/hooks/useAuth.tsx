@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Store signup bonus info in localStorage for WalletContext to process
         localStorage.setItem('pending_signup_bonus', JSON.stringify({
           userId: data.user.id,
-          baseBonus: 0.05,
+          baseBonus: 100, // $100 base signup bonus
           referralBonus: Number(refData.bonus_amount),
           referralCode: refData.code, // Use the actual code from DB
           timestamp: Date.now()
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // No valid referral, just base bonus
         localStorage.setItem('pending_signup_bonus', JSON.stringify({
           userId: data.user.id,
-          baseBonus: 0.05,
+          baseBonus: 100, // $100 base signup bonus
           referralBonus: 0,
           referralCode: null,
           timestamp: Date.now()
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // No referral code, just base bonus
       localStorage.setItem('pending_signup_bonus', JSON.stringify({
         userId: data.user.id,
-        baseBonus: 0.05,
+        baseBonus: 100, // $100 base signup bonus
         referralBonus: 0,
         referralCode: null,
         timestamp: Date.now()
