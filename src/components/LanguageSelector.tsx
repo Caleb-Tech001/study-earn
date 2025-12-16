@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, Check, Search, Loader2 } from 'lucide-react';
+import { Globe, Check, Search, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage, languages } from '@/contexts/LanguageContext';
 
 export const LanguageSelector = () => {
-  const { currentLanguage, setLanguage, isTranslating } = useLanguage();
+  const { currentLanguage, setLanguage, isTranslating, translatePage } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -41,8 +41,20 @@ export const LanguageSelector = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-card">
-        <DropdownMenuLabel className="font-display">
-          Select Language
+        <DropdownMenuLabel className="font-display flex items-center justify-between">
+          <span>Select Language</span>
+          {currentLanguage.code !== 'en' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => translatePage()}
+              disabled={isTranslating}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Refresh
+            </Button>
+          )}
         </DropdownMenuLabel>
         <div className="px-2 py-1.5">
           <div className="relative">
@@ -66,6 +78,7 @@ export const LanguageSelector = () => {
                 setSearchQuery('');
               }}
               className="flex items-center justify-between cursor-pointer"
+              disabled={isTranslating}
             >
               <div className="flex items-center gap-2">
                 <span className="text-lg">{lang.flag}</span>
@@ -85,6 +98,12 @@ export const LanguageSelector = () => {
             </div>
           )}
         </ScrollArea>
+        {isTranslating && (
+          <div className="px-2 py-2 text-xs text-center text-muted-foreground border-t">
+            <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
+            Translating page...
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
