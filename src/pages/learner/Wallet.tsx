@@ -43,7 +43,7 @@ const Wallet = () => {
     .reduce((sum, t) => sum + t.amount, 0));
 
   // Exchange rates
-  const pointsToDollar = 100; // 100 points = $1
+  const pointsToDollar = 1000; // 1000 points = $1
   
   const nairaBalance = balance * dollarToNaira;
 

@@ -60,10 +60,11 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
   const [walletAddress, setWalletAddress] = useState('');
   const [walletLabel, setWalletLabel] = useState('');
 
-  // No fees for withdrawals
+  // 2.5% withdrawal fee
   const amountNum = parseFloat(amount) || 0;
-  const nairaEquivalent = amountNum * usdToNaira;
-  const finalAmount = amountNum; // No fee deduction
+  const fee = amountNum * 0.025;
+  const finalAmount = amountNum - fee;
+  const nairaEquivalent = finalAmount * usdToNaira;
 
   // Auto-select default account on open
   useState(() => {
@@ -644,6 +645,10 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
                         <span>Amount</span>
                         <span>${amountNum.toFixed(2)}</span>
                       </div>
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Fee (2.5%)</span>
+                        <span>-${fee.toFixed(2)}</span>
+                      </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
                         <span>You'll receive</span>
                         <span>${finalAmount.toFixed(2)}</span>
@@ -651,7 +656,7 @@ export const WithdrawalModal = ({ open, onClose, balance }: WithdrawalModalProps
                       {withdrawType === 'bank' && (
                         <div className="flex justify-between text-sm text-muted-foreground">
                           <span>Naira equivalent</span>
-                          <span>≈ ₦{(finalAmount * usdToNaira).toLocaleString()}</span>
+                          <span>≈ ₦{nairaEquivalent.toLocaleString()}</span>
                         </div>
                       )}
                     </Card>
