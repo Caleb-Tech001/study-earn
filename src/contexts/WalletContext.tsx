@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Transaction {
   id: string;
@@ -28,117 +29,113 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const POINTS_TO_DOLLAR = 1000; // 1000 points = $1
 
-const initialTransactions: Transaction[] = [
-  {
-    id: '1',
-    type: 'earn',
-    description: 'Completed Python Basics Quiz',
-    amount: 15.0,
-    points: 1500,
-    status: 'completed',
-    date: '2025-01-15T10:30:00',
-  },
-  {
-    id: '2',
-    type: 'earn',
-    description: 'Completed JavaScript Advanced Module',
-    amount: 35.0,
-    points: 3500,
-    status: 'completed',
-    date: '2024-12-28T14:20:00',
-  },
-  {
-    id: '3',
-    type: 'redeem',
-    description: 'Amazon Gift Card - $50',
-    amount: -50.0,
-    points: -5000,
-    status: 'completed',
-    date: '2024-12-20T15:20:00',
-  },
-  {
-    id: '4',
-    type: 'earn',
-    description: '7-Day Streak Bonus',
-    amount: 25.0,
-    points: 2500,
-    status: 'completed',
-    date: '2024-12-14T00:00:00',
-  },
-  {
-    id: '5',
-    type: 'earn',
-    description: 'Completed Web Dev Module 3',
-    amount: 40.0,
-    points: 4000,
-    status: 'completed',
-    date: '2024-11-18T18:45:00',
-  },
-  {
-    id: '6',
-    type: 'referral',
-    description: 'Referral Bonus - Sarah J.',
-    amount: 20.0,
-    points: 2000,
-    status: 'completed',
-    date: '2024-10-30T09:30:00',
-  },
-  {
-    id: '7',
-    type: 'earn',
-    description: 'Monthly Achievement Bonus',
-    amount: 50.0,
-    points: 5000,
-    status: 'completed',
-    date: '2024-09-01T00:00:00',
-  },
-];
+// Helper to get user-specific storage keys
+const getStorageKeys = (userId: string) => ({
+  wallet: `studyearn_wallet_${userId}`,
+  transactions: `studyearn_transactions_${userId}`,
+  bonusProcessed: `studyearn_bonus_processed_${userId}`
+});
 
-const WALLET_STORAGE_KEY = 'studyearn_wallet';
-const TRANSACTIONS_STORAGE_KEY = 'studyearn_transactions';
-
-// Load initial state from localStorage
-const loadWalletState = () => {
+// Load wallet state for specific user
+const loadWalletState = (userId: string | null) => {
+  if (!userId) return { balance: 0, transactions: [], bonusProcessed: false };
+  
   try {
-    const savedBalance = localStorage.getItem(WALLET_STORAGE_KEY);
-    const savedTransactions = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
+    const keys = getStorageKeys(userId);
+    const savedBalance = localStorage.getItem(keys.wallet);
+    const savedTransactions = localStorage.getItem(keys.transactions);
+    const bonusProcessed = localStorage.getItem(keys.bonusProcessed) === 'true';
+    
     return {
       balance: savedBalance ? parseFloat(savedBalance) : 0,
-      transactions: savedTransactions ? JSON.parse(savedTransactions) : []
+      transactions: savedTransactions ? JSON.parse(savedTransactions) : [],
+      bonusProcessed
     };
   } catch {
-    return { balance: 0, transactions: [] };
+    return { balance: 0, transactions: [], bonusProcessed: false };
   }
 };
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
-  const initialState = loadWalletState();
-  const [balance, setBalance] = useState(initialState.balance);
-  const [transactions, setTransactions] = useState<Transaction[]>(initialState.transactions);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [hasProcessedSignupBonus, setHasProcessedSignupBonus] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
-  // Persist balance to localStorage whenever it changes
+  // Listen for auth state changes to get user ID
   useEffect(() => {
-    localStorage.setItem(WALLET_STORAGE_KEY, balance.toString());
-  }, [balance]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        const newUserId = session?.user?.id ?? null;
+        setUserId(newUserId);
+        
+        if (newUserId) {
+          // Load user-specific wallet data
+          const state = loadWalletState(newUserId);
+          setBalance(state.balance);
+          setTransactions(state.transactions);
+          setHasProcessedSignupBonus(state.bonusProcessed);
+          setIsInitialized(true);
+        } else {
+          // Reset to defaults when logged out
+          setBalance(0);
+          setTransactions([]);
+          setHasProcessedSignupBonus(false);
+          setIsInitialized(false);
+        }
+      }
+    );
 
-  // Persist transactions to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
-  }, [transactions]);
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const newUserId = session?.user?.id ?? null;
+      setUserId(newUserId);
+      
+      if (newUserId) {
+        const state = loadWalletState(newUserId);
+        setBalance(state.balance);
+        setTransactions(state.transactions);
+        setHasProcessedSignupBonus(state.bonusProcessed);
+        setIsInitialized(true);
+      }
+    });
 
-  // Process pending signup bonus on mount
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Persist balance to user-specific localStorage
   useEffect(() => {
-    if (hasProcessedSignupBonus) return;
+    if (userId && isInitialized) {
+      const keys = getStorageKeys(userId);
+      localStorage.setItem(keys.wallet, balance.toString());
+    }
+  }, [balance, userId, isInitialized]);
+
+  // Persist transactions to user-specific localStorage
+  useEffect(() => {
+    if (userId && isInitialized) {
+      const keys = getStorageKeys(userId);
+      localStorage.setItem(keys.transactions, JSON.stringify(transactions));
+    }
+  }, [transactions, userId, isInitialized]);
+
+  // Process pending signup bonus on mount (user-specific)
+  useEffect(() => {
+    if (!userId || !isInitialized || hasProcessedSignupBonus) return;
     
     const pendingBonus = localStorage.getItem('pending_signup_bonus');
     if (pendingBonus) {
       try {
         const bonusData = JSON.parse(pendingBonus);
+        
+        // Only process if this bonus is for current user
+        if (bonusData.userId !== userId) return;
+        
         const totalBonus = (bonusData.baseBonus || 0.05) + (bonusData.referralBonus || 0);
         
-        // Add the bonus to balance (add to existing, not replace)
+        // Add the bonus to balance
         setBalance(prev => prev + totalBonus);
         
         // Create welcome transaction
@@ -156,6 +153,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         
         setTransactions(prev => [signupTransaction, ...prev]);
         
+        // Mark bonus as processed for this user
+        const keys = getStorageKeys(userId);
+        localStorage.setItem(keys.bonusProcessed, 'true');
+        setHasProcessedSignupBonus(true);
+        
         // Show toast notification
         setTimeout(() => {
           toast({
@@ -164,15 +166,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           });
         }, 1000);
         
-        // Remove from localStorage
+        // Remove pending bonus from localStorage
         localStorage.removeItem('pending_signup_bonus');
-        setHasProcessedSignupBonus(true);
       } catch (e) {
         console.error('Failed to process signup bonus:', e);
         localStorage.removeItem('pending_signup_bonus');
       }
     }
-  }, [hasProcessedSignupBonus, toast]);
+  }, [userId, isInitialized, hasProcessedSignupBonus, toast]);
 
   // Auto-complete pending withdrawals after 2 minutes
   useEffect(() => {

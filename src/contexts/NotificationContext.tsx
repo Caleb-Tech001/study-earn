@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Notification {
   id: string;
@@ -22,63 +23,110 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const initialNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Welcome to StudyEarn!',
-    message: 'Start your learning journey and earn rewards. Complete the quick start guide to earn your first 50 points!',
-    type: 'success',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    points: 50,
-  },
-  {
-    id: '2',
-    title: 'You earned 20 points!',
-    message: 'Congratulations! You earned 20 points for completing a quiz.',
-    type: 'reward',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    points: 20,
-  },
-  {
-    id: '3',
-    title: 'Word Game Level 1 Completed!',
-    message: 'Amazing work! You completed Level 1 of the word game and earned 15 points.',
-    type: 'reward',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60),
-    points: 15,
-  },
-  {
-    id: '4',
-    title: 'New Module Unlocked',
-    message: 'You\'ve unlocked the Advanced Python Programming module. Start learning now!',
-    type: 'info',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 120),
-  },
-  {
-    id: '5',
-    title: 'You earned a badge!',
-    message: 'Congratulations! You earned the "7 Day Streak" badge for consistent learning.',
-    type: 'reward',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 180),
-  },
-  {
-    id: '6',
-    title: 'Withdrawal Processing',
-    message: 'Your withdrawal request of $50 is being processed. Funds will arrive in 2-3 business days.',
-    type: 'info',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 240),
-  },
-];
+// Helper to get user-specific storage key
+const getStorageKey = (userId: string) => `studyearn_notifications_${userId}`;
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        const newUserId = session?.user?.id ?? null;
+        setUserId(newUserId);
+        
+        if (newUserId) {
+          // Load user-specific notifications
+          loadNotifications(newUserId);
+        } else {
+          setNotifications([]);
+          setIsInitialized(false);
+        }
+      }
+    );
+
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const newUserId = session?.user?.id ?? null;
+      setUserId(newUserId);
+      
+      if (newUserId) {
+        loadNotifications(newUserId);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadNotifications = (uid: string) => {
+    try {
+      const key = getStorageKey(uid);
+      const saved = localStorage.getItem(key);
+      
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Convert timestamp strings back to Date objects
+        const withDates = parsed.map((n: any) => ({
+          ...n,
+          timestamp: new Date(n.timestamp)
+        }));
+        setNotifications(withDates);
+      } else {
+        // First time user - show only welcome notification
+        const welcomeNotification: Notification = {
+          id: '1',
+          title: 'Welcome to StudyEarn!',
+          message: 'Start your learning journey and earn rewards. Complete courses and games to earn points!',
+          type: 'success',
+          read: false,
+          timestamp: new Date(),
+          points: 50,
+        };
+        
+        // Check if user has a referral bonus
+        const pendingBonus = localStorage.getItem('pending_signup_bonus');
+        if (pendingBonus) {
+          try {
+            const bonusData = JSON.parse(pendingBonus);
+            if (bonusData.userId === uid && bonusData.referralCode) {
+              const referralNotification: Notification = {
+                id: '2',
+                title: 'Referral Bonus Applied!',
+                message: `You signed up with referral code "${bonusData.referralCode}" and received an extra $${bonusData.referralBonus?.toFixed(2) || '1.00'} bonus!`,
+                type: 'reward',
+                read: false,
+                timestamp: new Date(),
+                points: Math.round((bonusData.referralBonus || 1) * 1000),
+              };
+              setNotifications([referralNotification, welcomeNotification]);
+            } else {
+              setNotifications([welcomeNotification]);
+            }
+          } catch {
+            setNotifications([welcomeNotification]);
+          }
+        } else {
+          setNotifications([welcomeNotification]);
+        }
+      }
+      setIsInitialized(true);
+    } catch {
+      setNotifications([]);
+      setIsInitialized(true);
+    }
+  };
+
+  // Persist notifications when they change
+  useEffect(() => {
+    if (userId && isInitialized) {
+      const key = getStorageKey(userId);
+      localStorage.setItem(key, JSON.stringify(notifications));
+    }
+  }, [notifications, userId, isInitialized]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
