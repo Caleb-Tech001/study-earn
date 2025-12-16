@@ -27,7 +27,6 @@ serve(async (req) => {
       );
     }
 
-    // If target is same as source, return original texts
     if (targetLanguage === sourceLanguage) {
       return new Response(
         JSON.stringify({ translations: texts }),
@@ -40,22 +39,17 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Batch texts for translation (max 20 at a time for efficiency)
-    const batchSize = 20;
+    // Use faster flash-lite model and larger batches for speed
+    const batchSize = 50;
     const batches: string[][] = [];
     for (let i = 0; i < texts.length; i += batchSize) {
       batches.push(texts.slice(i, i + batchSize));
     }
 
-    const allTranslations: string[] = [];
+    // Process all batches in parallel for speed
+    const batchPromises = batches.map(async (batch) => {
+      const prompt = `Translate from ${sourceLanguage} to ${targetLanguage}. Return ONLY a JSON array of translated strings, same order. Keep numbers/formatting intact.
 
-    for (const batch of batches) {
-      const prompt = `Translate the following texts from ${sourceLanguage} to ${targetLanguage}. 
-Return ONLY a JSON array of translated strings in the exact same order, nothing else.
-Keep formatting, numbers, and special characters intact.
-If a text is already in the target language or cannot be translated, return it as-is.
-
-Texts to translate:
 ${JSON.stringify(batch)}`;
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -65,54 +59,34 @@ ${JSON.stringify(batch)}`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
-            { 
-              role: "system", 
-              content: "You are a professional translator. Translate accurately and naturally. Return ONLY valid JSON arrays, no markdown or explanations." 
-            },
+            { role: "system", content: "You are a fast translator. Return ONLY valid JSON arrays." },
             { role: "user", content: prompt },
           ],
         }),
       });
 
       if (!response.ok) {
-        if (response.status === 429) {
-          return new Response(
-            JSON.stringify({ error: "Rate limit exceeded, please try again later" }),
-            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        if (response.status === 402) {
-          return new Response(
-            JSON.stringify({ error: "Payment required" }),
-            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        throw new Error(`AI gateway error: ${response.status}`);
+        console.error(`AI error: ${response.status}`);
+        return batch;
       }
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content || "";
       
-      // Parse the JSON array from the response
-      let translations: string[];
       try {
-        // Remove markdown code blocks if present
         const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-        translations = JSON.parse(cleanContent);
-        
-        if (!Array.isArray(translations)) {
-          throw new Error("Response is not an array");
-        }
+        const translations = JSON.parse(cleanContent);
+        return Array.isArray(translations) ? translations : batch;
       } catch {
-        // If parsing fails, return original texts for this batch
-        console.error("Failed to parse translations:", content);
-        translations = batch;
+        console.error("Parse failed:", content.substring(0, 100));
+        return batch;
       }
+    });
 
-      allTranslations.push(...translations);
-    }
+    const results = await Promise.all(batchPromises);
+    const allTranslations = results.flat();
 
     return new Response(
       JSON.stringify({ translations: allTranslations }),
