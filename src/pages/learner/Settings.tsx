@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Bell, Lock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Shield, Bell, Lock, CreditCard, CheckCircle2, Sun, Moon, Monitor, Palette } from 'lucide-react';
 import { PricingPlans } from '@/components/subscription/PricingPlans';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -16,6 +17,7 @@ const Settings = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { plan, subscriptionEnd, checkSubscription } = useSubscription();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     // Check for success/canceled params from Stripe redirect
@@ -58,12 +60,61 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList>
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="appearance" className="mt-6">
+            <Card className="border-2 p-6">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Palette className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display text-xl font-bold">Appearance</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Customize how StudyEarn looks on your device
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <Label className="mb-4 block">Theme</Label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <Card 
+                      className={`cursor-pointer p-4 text-center transition-all hover:border-primary ${theme === 'light' ? 'border-primary bg-primary/5' : ''}`}
+                      onClick={() => setTheme('light')}
+                    >
+                      <Sun className="mx-auto mb-2 h-8 w-8 text-amber-500" />
+                      <p className="font-medium">Light</p>
+                      <p className="text-xs text-muted-foreground">Bright and clean</p>
+                    </Card>
+                    <Card 
+                      className={`cursor-pointer p-4 text-center transition-all hover:border-primary ${theme === 'dark' ? 'border-primary bg-primary/5' : ''}`}
+                      onClick={() => setTheme('dark')}
+                    >
+                      <Moon className="mx-auto mb-2 h-8 w-8 text-indigo-500" />
+                      <p className="font-medium">Dark</p>
+                      <p className="text-xs text-muted-foreground">Easy on the eyes</p>
+                    </Card>
+                    <Card 
+                      className={`cursor-pointer p-4 text-center transition-all hover:border-primary ${theme === 'system' ? 'border-primary bg-primary/5' : ''}`}
+                      onClick={() => setTheme('system')}
+                    >
+                      <Monitor className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                      <p className="font-medium">System</p>
+                      <p className="text-xs text-muted-foreground">Match device</p>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="notifications" className="mt-6">
             <Card className="border-2 p-6">
