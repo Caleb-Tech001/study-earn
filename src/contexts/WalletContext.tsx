@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Transaction {
@@ -95,9 +95,39 @@ const initialTransactions: Transaction[] = [
 ];
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
-  const [balance, setBalance] = useState(245.5);
+  const [balance, setBalance] = useState(300);
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const { toast } = useToast();
+
+  // Auto-complete pending withdrawals after 2 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTransactions(prev => {
+        const now = new Date().getTime();
+        let hasChanges = false;
+        const updated = prev.map(t => {
+          if (t.status === 'pending') {
+            const transactionTime = new Date(t.date).getTime();
+            const twoMinutes = 2 * 60 * 1000;
+            if (now - transactionTime >= twoMinutes) {
+              hasChanges = true;
+              return { ...t, status: 'completed' as const };
+            }
+          }
+          return t;
+        });
+        if (hasChanges) {
+          toast({
+            title: 'Withdrawal Completed',
+            description: 'Your withdrawal has been processed successfully!',
+          });
+        }
+        return hasChanges ? updated : prev;
+      });
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [toast]);
 
   // Points = balance × 100
   const pointsBalance = Math.round(balance * POINTS_TO_DOLLAR);
