@@ -1,100 +1,73 @@
-# StudyEarn
+# Welcome to your Lovable project
 
-## Overview
+## Project info
 
-This project is a modern web application developed using a modular frontend architecture. It focuses on performance, maintainability, and clean user experience while following industry standard development workflows. The application is designed to be easily extensible and deployable on cloud platforms.
+**URL**: https://lovable.dev/projects/d8d07f53-6e5a-48be-a60f-3f8e129356f6
 
-## Live Demo
+## How can I edit this code?
 
-Deployed on Vercel  
-**URL:** [https://study-earn.vercel.app](https://study-earn.vercel.app)
+There are several ways of editing your application.
 
-## Features
+**Use Lovable**
 
-- Responsive user interface
-- Component driven architecture
-- Fast build and hot reload during development
-- Scalable project structure
-- Optimized production build
+Simply visit the [Lovable Project](https://lovable.dev/projects/d8d07f53-6e5a-48be-a60f-3f8e129356f6) and start prompting.
 
-## Tech Stack
+Changes made via Lovable will be committed automatically to this repo.
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- shadcn UI
+**Use your preferred IDE**
 
-## Project Structure
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-```
-src/
- ├─ components/
- ├─ pages/
- ├─ hooks/
- ├─ utils/
- ├─ assets/
- ├─ App.tsx
- └─ main.tsx
-```
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-## Getting Started
+Follow these steps:
 
-### Prerequisites
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-Ensure the following are installed on your system:
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-- Node.js
-- npm or yarn
+# Step 3: Install the necessary dependencies.
+npm i
 
-### Installation
-
-Clone the repository and install dependencies:
-
-```bash
-git clone <repository-url>
-cd <project-folder>
-npm install
-```
-
-### Development
-
-Start the local development server:
-
-```bash
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-The application will be available at: `http://localhost:5173`
+**Edit a file directly in GitHub**
 
-### Build for Production
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-Generate an optimized production build:
+**Use GitHub Codespaces**
 
-```bash
-npm run build
-```
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-### Preview Production Build
+## What technologies are used for this project?
 
-```bash
-npm run preview
-```
+This project is built with:
 
-## Deployment
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-The project is production ready and can be deployed on platforms such as:
+## How can I deploy this project?
 
-- Vercel
-- Netlify
-- Any static hosting service supporting SPA deployments
+Simply open [Lovable](https://lovable.dev/projects/d8d07f53-6e5a-48be-a60f-3f8e129356f6) and click on Share -> Publish.
 
-Vercel deployment requires no additional configuration beyond the default Vite settings.
+## Can I connect a custom domain to my Lovable project?
 
-## Version Control
+Yes, you can!
 
-All changes are tracked using Git. The project follows a commit based workflow to ensure traceability and collaboration readiness.
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-## License
-
-This project is licensed for academic, research, and demonstration purposes.
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
