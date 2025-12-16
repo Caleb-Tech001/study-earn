@@ -8,10 +8,13 @@ import {
   Zap, 
   Trophy,
 } from 'lucide-react';
+import { useWallet } from '@/contexts/WalletContext';
 
 export const ProgressOverview = () => {
+  const { pointsBalance } = useWallet();
+  
   const stats = {
-    points: 2450,
+    points: pointsBalance,
     streak: 7,
     badges: 12,
     xpLevel: 15,
