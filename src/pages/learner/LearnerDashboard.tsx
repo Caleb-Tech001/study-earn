@@ -102,7 +102,7 @@ const LearnerDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="mt-1 font-display text-2xl font-bold">${stats.balance}</p>
+                <p className="mt-1 font-display text-2xl font-bold">${stats.balance.toFixed(2)}</p>
               </div>
               <div className="rounded-xl bg-primary/10 p-3">
                 <Wallet className="h-5 w-5 text-primary" />
