@@ -36,15 +36,32 @@ const getStorageKeys = (userId: string) => ({
   bonusProcessed: `studyearn_bonus_processed_${userId}`
 });
 
+// Owner's signup bonus amount
+const OWNER_BONUS = 300;
+// Default signup bonus for new users
+const DEFAULT_SIGNUP_BONUS = 100;
+
 // Migrate old generic storage to user-specific storage
 const migrateOldStorage = (userId: string) => {
   const keys = getStorageKeys(userId);
   
-  // Special restoration for affected user - Caleb's account
-  const restoredKey = `studyearn_restored_${userId}`;
+  // Special restoration for affected user - Caleb's account (owner)
+  const restoredKey = `studyearn_restored_v2_${userId}`;
   if (userId === '6a45c27a-8874-48ce-8a52-ea6232730c90' && !localStorage.getItem(restoredKey)) {
-    localStorage.setItem(keys.wallet, '300');
+    localStorage.setItem(keys.wallet, OWNER_BONUS.toString());
     localStorage.setItem(keys.bonusProcessed, 'true');
+    
+    // Add the welcome transaction for total earned tracking
+    const welcomeTransaction: Transaction = {
+      id: 'owner_welcome_bonus_' + Date.now(),
+      type: 'earn',
+      description: 'Owner Welcome Bonus',
+      amount: OWNER_BONUS,
+      points: OWNER_BONUS * POINTS_TO_DOLLAR,
+      status: 'completed',
+      date: new Date().toISOString(),
+    };
+    localStorage.setItem(keys.transactions, JSON.stringify([welcomeTransaction]));
     localStorage.setItem(restoredKey, 'true');
     return;
   }
@@ -165,7 +182,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         // Only process if this bonus is for current user
         if (bonusData.userId !== userId) return;
         
-        const totalBonus = (bonusData.baseBonus || 100) + (bonusData.referralBonus || 0);
+        const totalBonus = (bonusData.baseBonus || DEFAULT_SIGNUP_BONUS) + (bonusData.referralBonus || 0);
         
         // Add the bonus to balance
         setBalance(prev => prev + totalBonus);
