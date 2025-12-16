@@ -284,9 +284,6 @@ const Signup = () => {
                 {referralValid === false && (
                   <p className="mt-1 text-xs text-destructive">Invalid referral code</p>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  New users get $100 signup bonus + 100,000 points. With valid referral: $101 total!
-                </p>
               </div>
 
               {/* Terms checkbox */}
