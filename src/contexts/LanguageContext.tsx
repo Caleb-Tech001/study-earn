@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface Language {
   code: string;
@@ -35,40 +37,177 @@ export const languages: Language[] = [
   { code: 'zu', name: 'Zulu', nativeName: 'isiZulu', flag: '🇿🇦' },
 ];
 
+interface TranslationCache {
+  [key: string]: { [langCode: string]: string };
+}
+
 interface LanguageContextType {
   currentLanguage: Language;
   setLanguage: (lang: Language) => void;
   isTranslating: boolean;
+  t: (text: string) => string;
+  translatePage: () => Promise<void>;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const translationCache: TranslationCache = {};
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [currentLanguage, setCurrentLanguage] = useState<Language>(languages[0]);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [pageTranslations, setPageTranslations] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const savedLang = localStorage.getItem('preferred_language');
     if (savedLang) {
       const lang = languages.find(l => l.code === savedLang);
-      if (lang) setCurrentLanguage(lang);
+      if (lang) {
+        setCurrentLanguage(lang);
+        if (lang.code !== 'en') {
+          setTimeout(() => translatePage(lang.code), 100);
+        }
+      }
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
+  const extractTextNodes = useCallback((): { node: Text; text: string }[] => {
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
+          
+          // Skip scripts, styles, and inputs
+          const tagName = parent.tagName.toLowerCase();
+          if (['script', 'style', 'noscript', 'textarea', 'input'].includes(tagName)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          
+          // Skip empty or whitespace-only text
+          const text = node.textContent?.trim();
+          if (!text || text.length < 2) return NodeFilter.FILTER_REJECT;
+          
+          // Skip already translated or marked elements
+          if (parent.hasAttribute('data-no-translate')) return NodeFilter.FILTER_REJECT;
+          
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    const textNodes: { node: Text; text: string }[] = [];
+    let node: Text | null;
+    while ((node = walker.nextNode() as Text)) {
+      const text = node.textContent?.trim();
+      if (text) {
+        textNodes.push({ node, text });
+      }
+    }
+    return textNodes;
+  }, []);
+
+  const translatePage = useCallback(async (targetLang?: string) => {
+    const langCode = targetLang || currentLanguage.code;
+    
+    if (langCode === 'en') {
+      // Reset to original
+      setPageTranslations(new Map());
+      return;
+    }
+
     setIsTranslating(true);
+
+    try {
+      const textNodes = extractTextNodes();
+      
+      // Get unique texts to translate
+      const uniqueTexts = [...new Set(textNodes.map(n => n.text))];
+      
+      // Filter out already cached
+      const textsToTranslate = uniqueTexts.filter(text => {
+        const cacheKey = `en:${text}`;
+        return !translationCache[cacheKey]?.[langCode];
+      });
+
+      if (textsToTranslate.length > 0) {
+        // Batch translate in chunks
+        const chunkSize = 50;
+        for (let i = 0; i < textsToTranslate.length; i += chunkSize) {
+          const chunk = textsToTranslate.slice(i, i + chunkSize);
+          
+          const { data, error } = await supabase.functions.invoke('translate-text', {
+            body: {
+              texts: chunk,
+              targetLanguage: langCode,
+              sourceLanguage: 'en',
+            },
+          });
+
+          if (error) {
+            console.error('Translation error:', error);
+            continue;
+          }
+
+          // Cache translations
+          const translations = data.translations || [];
+          chunk.forEach((text, index) => {
+            const cacheKey = `en:${text}`;
+            if (!translationCache[cacheKey]) {
+              translationCache[cacheKey] = {};
+            }
+            translationCache[cacheKey][langCode] = translations[index] || text;
+          });
+        }
+      }
+
+      // Apply translations to DOM
+      const newTranslations = new Map<string, string>();
+      textNodes.forEach(({ node, text }) => {
+        const cacheKey = `en:${text}`;
+        const translation = translationCache[cacheKey]?.[langCode];
+        if (translation && translation !== text) {
+          node.textContent = translation;
+          newTranslations.set(text, translation);
+        }
+      });
+
+      setPageTranslations(newTranslations);
+      toast.success(`Page translated to ${languages.find(l => l.code === langCode)?.name || langCode}`);
+    } catch (error) {
+      console.error('Page translation failed:', error);
+      toast.error('Translation failed. Please try again.');
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [currentLanguage.code, extractTextNodes]);
+
+  const setLanguage = useCallback((lang: Language) => {
     setCurrentLanguage(lang);
     localStorage.setItem('preferred_language', lang.code);
-    
-    // Update HTML lang attribute
     document.documentElement.lang = lang.code;
     
-    // Simulate translation delay
-    setTimeout(() => setIsTranslating(false), 500);
-  };
+    // Trigger page translation
+    translatePage(lang.code);
+  }, [translatePage]);
+
+  const t = useCallback((text: string): string => {
+    if (currentLanguage.code === 'en') return text;
+    
+    const cacheKey = `en:${text}`;
+    return translationCache[cacheKey]?.[currentLanguage.code] || pageTranslations.get(text) || text;
+  }, [currentLanguage.code, pageTranslations]);
 
   return (
-    <LanguageContext.Provider value={{ currentLanguage, setLanguage, isTranslating }}>
+    <LanguageContext.Provider value={{ 
+      currentLanguage, 
+      setLanguage, 
+      isTranslating, 
+      t,
+      translatePage 
+    }}>
       {children}
     </LanguageContext.Provider>
   );
