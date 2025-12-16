@@ -26,7 +26,7 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const POINTS_TO_DOLLAR = 100; // 100 points = $1
+const POINTS_TO_DOLLAR = 1000; // 1000 points = $1
 
 const initialTransactions: Transaction[] = [
   {
