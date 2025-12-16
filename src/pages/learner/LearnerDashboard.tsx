@@ -6,6 +6,7 @@ import { SkillToEarnTiles } from '@/components/dashboard/SkillToEarnTiles';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { ProgressOverview } from '@/components/dashboard/ProgressOverview';
 import { CrosswordGame } from '@/components/games/CrosswordGame';
+import { useWallet } from '@/contexts/WalletContext';
 import {
   Wallet,
   TrendingUp,
@@ -22,10 +23,11 @@ import { useState } from 'react';
 
 const LearnerDashboard = () => {
   const [showGame, setShowGame] = useState(false);
+  const { balance } = useWallet();
   
-  // Mock data - would come from API
+  // Stats using real wallet balance
   const stats = {
-    balance: 245.5,
+    balance,
     streak: 7,
     completedModules: 12,
     inProgressModules: 3,
