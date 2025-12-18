@@ -7,7 +7,7 @@ This project is a modern web application developed using a modular frontend arch
 ## Live Demo
 
 Deployed on Vercel  
-**URL:** [https://study-earn.vercel.app](https://study-earn.vercel.app)
+**URL:** [https://studyearn.vercel.app](https://studyearn.vercel.app)
 
 ## Features
 
