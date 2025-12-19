@@ -70,3 +70,13 @@ src/
 ├─ utils/          API helpers and formatting utilities
 ├─ App.tsx         Main routing component
 └─ main.tsx        Application entry point
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js version 18 or higher
+- npm or yarn
+
+### Installation
