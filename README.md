@@ -145,3 +145,14 @@ http://localhost:5173
 ## Team Information
 
 ### Team EduFund
+
+
+## What’s Next for StudyEarn
+
+- Expanding language support to over 1,000 local African dialects using AI
+- Integrating blockchain for faster and borderless student payouts
+- Partnering with African universities for official course certification
+
+## License
+
+This project is licensed for academic, research, and demonstration purposes.
