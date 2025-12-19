@@ -62,7 +62,7 @@ Real time balance synchronization ensures transparency for all users.
 ## Project Structure
 
 ```bash
-src/
+  src/
 
    ├─ components/     Reusable UI elements
    ├─ pages/          Feature specific views such as Marketplace and AI Lab
