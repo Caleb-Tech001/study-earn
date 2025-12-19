@@ -80,3 +80,16 @@ src/
 - npm or yarn
 
 ### Installation
+
+```bash
+git clone <your-repo-url>
+npm install
+```
+
+### Environment Setup
+
+Create a .env file and add your OpenAI API key:
+```bash
+OPENAI_API_KEY=your_api_key_here
+```
+
