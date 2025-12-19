@@ -125,8 +125,23 @@ npm install
 
 ### Environment Setup
 
- Create a .env file and add your OpenAI API key:
+Create a .env file and add your OpenAI API key:
 ```bash
 OPENAI_API_KEY=your_api_key_here
 ```
 
+### Development
+
+```bash
+npm run dev
+```
+
+The application will be available at:
+
+```bash
+http://localhost:5173
+```
+
+## Team Information
+
+### Team EduFund
