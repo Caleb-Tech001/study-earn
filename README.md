@@ -146,10 +146,10 @@ http://localhost:5173
 
 ### Team EduFund
 
-| Column 1 | Column 2 | Column 3 |
+| Name | Roles | Contact Email |
 |----------|----------|----------|
-| Row 1, Cell 1 | Row 1, Cell 2 | Row 1, Cell 3 |
-| Row 2, Cell 1 | Row 2, Cell 2 | Row 2, Cell 3 |
+| OLADEPO Caleb Olugbenga | Team Lead and Full-Stack Developer | caleboladepo@gmail.com |
+| OLAWALE Ayanfe John | Business Analyst and AI/ML Engineer | ayanfejohn349@gmail.com |
 
 ## What’s Next for StudyEarn
 
