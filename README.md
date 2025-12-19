@@ -22,15 +22,15 @@ StudyEarn was built to solve this problem by turning learning into an opportunit
 
 StudyEarn is a learning platform where users earn real money and points by completing educational activities:
 
-1. **Skill-to-Earn**: Complete courses, quizzes, and modules to earn USD and points.
-2. **Wallet System**: Track earnings, withdraw to bank accounts, and manage points.
-3. **Marketplace**: Redeem points for products or upload items to sell.
-4. **Community Support**: Ask questions, share knowledge, and earn through peer learning.
-5. **Leaderboards**: Compete with other learners for top rankings.
-6. **AI Assistant**: Voice-enabled study companion powered by OpenAI.
-7. **Referral Program**: Earn bonuses by inviting friends.
-8. **Opportunities**: Sponsorships, Scholarships, Internships, and Hackathons. 
-9. **And more**: Explore additional features on the platform.
+- **Skill-to-Earn**: Complete courses, quizzes, and modules to earn USD and points
+- **Wallet System**: Track earnings, withdraw to bank accounts, and manage points
+- **Marketplace**: Redeem points for products or upload items to sell
+- **Community Support**: Ask questions, share knowledge, and earn through peer learning
+- **Leaderboards**: Compete with other learners for top rankings
+- **AI Assistant**: Voice-enabled study companion powered by OpenAI
+- **Referral Program**: Earn bonuses by inviting friends
+- **Opportunities**: Sponsorships, Scholarships, Internships, and Hackathons
+- **And more**: Kindly explore additional features on the platform.
 
 ## Key Features
 
@@ -125,7 +125,7 @@ npm install
 
 ### Environment Setup
 
-Create a .env file and add your OpenAI API key:
+ Create a .env file and add your OpenAI API key:
 ```bash
 OPENAI_API_KEY=your_api_key_here
 ```
