@@ -65,7 +65,7 @@ StudyEarn is a learning platform where users earn real money and points by compl
 - Stripe for payments
 - Vercel for deployment
 
-## Architecture & Workflow
+### Architecture & Workflow
 
 StudyEarn uses a modular, component-driven architecture optimized for scalability and maintainability:
 
@@ -76,13 +76,70 @@ StudyEarn uses a modular, component-driven architecture optimized for scalabilit
 - **Backend:** Supabase (Lovable Cloud) handles authentication, database, and edge functions.
 - **Deployment:** Vercel for fast, globally accessible hosting.
 
-## AI Models and Tools Used
+### AI Models and Tools Used
 
 - **OpenAI GPT-4o:** Provides intelligent, context-aware study assistance.  
 - **ElevenLabs TTS:** Converts AI responses into voice for the study companion.  
 - **Supabase (Lovable Cloud):** Database, authentication, and real-time edge functions.  
 - **Stripe API:** Payment processing for subscriptions and withdrawals.  
 - **Google Translate API:** Multi-language support for local African dialects.
+
+## Project Structure
+
+```bash
+src/
+ ├─ components/     Reusable UI elements
+ ├─ pages/          Feature-specific views such as Marketplace and AI Lab
+ ├─ hooks/          Custom React hooks
+ ├─ utils/          API helpers and formatting utilities
+ ├─ App.tsx         Main routing component
+ └─ main.tsx        Application entry point
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js version 18 or higher
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <your-repo-url>  
+cd <project-folder>
+````
+2. Install dependencies:
+
+```bash
+npm install
+````
+
+### Environment Setup
+
+Set up environment variables in a .env file:
+
+```bash
+OPENAI_API_KEY=your_api_key_here
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+```
+
+### Development
+
+1. Run the development server:
+
+```bash
+npm run dev
+```
+
+2. The application will be available at:
+
+```bash
+http://localhost:5173
+```
 
 ## Challenges We Ran Into
 
@@ -107,51 +164,6 @@ StudyEarn uses a modular, component-driven architecture optimized for scalabilit
 - Accurate live balance updates
 - Multiple withdrawal methods (gift cards, bank account, crypto)
 - Multi-language support via Google Translate API.
-
-## Project Structure
-
-```bash
-src/
- ├─ components/     Reusable UI elements
- ├─ pages/          Feature-specific views such as Marketplace and AI Lab
- ├─ hooks/          Custom React hooks
- ├─ utils/          API helpers and formatting utilities
- ├─ App.tsx         Main routing component
- └─ main.tsx        Application entry point
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js version 18 or higher
-- npm or yarn
-
-### Installation
-
-```bash
-git clone <your-repo-url>  
-npm install
-````
-
-### Environment Setup
-
-Create a .env file and add your OpenAI API key:
-```bash
-OPENAI_API_KEY=your_api_key_here
-```
-
-### Development
-
-```bash
-npm run dev
-```
-
-The application will be available at:
-
-```bash
-http://localhost:5173
-```
 
 ## Team Information
 
