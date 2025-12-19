@@ -149,9 +149,14 @@ http://localhost:5173
 
 ## What’s Next for StudyEarn
 
-- Expanding language support to over 1,000 local African dialects using AI
-- Integrating blockchain for faster and borderless student payouts
-- Partnering with African universities for official course certification
+- Expanding language support to over 1,000 local African dialects using AI.
+- Integrating blockchain for faster and borderless student payouts.
+- Partnering with African universities for official course certification.
+- Building Mobile App for Native iOS and Android versions.
+- Enabling Offline Access (offline study mode for students.
+- Integrating deeper learning insights and progress predictions.
+- Global Expansion: Multi-currency support and more localized content.
+- Enable transferrable points among students.
 
 ## License
 
