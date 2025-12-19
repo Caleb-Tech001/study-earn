@@ -65,13 +65,24 @@ StudyEarn is a learning platform where users earn real money and points by compl
 - Stripe for payments
 - Vercel for deployment
 
-## Architecture and Workflow
+## Architecture & Workflow
 
-StudyEarn uses a modular, component-driven architecture.
+StudyEarn uses a modular, component-driven architecture optimized for scalability and maintainability:
 
-- The AI Assistant interacts with the OpenAI API to provide real-time academic support.
-- The Marketplace manages digital asset uploads, peer-to-peer transactions, and earnings distribution.
-- Real-time balance synchronization ensures transparency for all users.
+- **Frontend Components:** Built with React 18, TypeScript, Vite, Tailwind CSS, and Framer Motion for a responsive, smooth UI.
+- **AI Assistant:** Communicates with OpenAI API to provide real-time academic support.
+- **Marketplace Module:** Manages digital asset uploads, peer-to-peer transactions, and revenue distribution.
+- **Wallet System:** Tracks earnings, points, and withdrawals with real-time synchronization to ensure transparency.
+- **Backend:** Supabase (Lovable Cloud) handles authentication, database, and edge functions.
+- **Deployment:** Vercel for fast, globally accessible hosting.
+
+## AI Models and Tools Used
+
+- **OpenAI GPT-4o:** Provides intelligent, context-aware study assistance.  
+- **ElevenLabs TTS:** Converts AI responses into voice for the study companion.  
+- **Supabase (Lovable Cloud):** Database, authentication, and real-time edge functions.  
+- **Stripe API:** Payment processing for subscriptions and withdrawals.  
+- **Google Translate API:** Multi-language support for local African dialects.
 
 ## Challenges We Ran Into
 
