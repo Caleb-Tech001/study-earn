@@ -62,12 +62,13 @@ Real time balance synchronization ensures transparency for all users.
 ## Project Structure
 
 src/
- ├─ components/     Reusable UI elements
- ├─ pages/          Feature specific views such as Marketplace and AI Lab
- ├─ hooks/          Custom React hooks
- ├─ utils/          API helpers and formatting utilities
- ├─ App.tsx         Main routing component
- └─ main.tsx        Application entry point
+├─ components/ Reusable UI elements
+├─ pages/ Feature specific views such as Marketplace and AI Lab
+├─ hooks/ Custom React hooks
+├─ utils/ API helpers and formatting utilities
+├─ App.tsx Main routing component
+└─ main.tsx Application entry point
+
 
 ## Getting Started
 
@@ -78,8 +79,10 @@ src/
 
 ### Installation
 
-git clone <your-repo-url>  
+```bash
+git clone <your-repo-url>
 npm install
+
 
 ### Environment Setup
 
@@ -99,7 +102,7 @@ http://localhost:5173
 
 ### Team Name
 
-Insert Team Name
+Team EduFund
 
 Name | Role | Contact Email  
 Oladepo Caleb Olugbenga | Project Lead and Full Stack Developer | caleboladepo@gmail.com
