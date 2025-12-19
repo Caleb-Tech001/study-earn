@@ -6,7 +6,7 @@
 
 - Live Demo: https://studyearn.vercel.app
 - Video Presentation: https://youtu.be/PA1qGJnIXes
-- Presentation Slides: (https://drive.google.com/file/d/1CwmKoz2XXGCVBGCLMVgIlmzOfkQQRvjM/view)
+- Presentation Slides: https://drive.google.com/file/d/1CwmKoz2XXGCVBGCLMVgIlmzOfkQQRvjM/view
 
 ## Inspiration and Problem Statement
 
@@ -48,7 +48,7 @@ StudyEarn was built to solve this problem by turning learning into an opportunit
 - Vite
 - Tailwind CSS
 - shadcn UI
-- OpenAI API (GPT 4o and Whisper for voice)
+- OpenAI API (GPT 4o and ElevenLabs for voice)
 - Vercel for deployment
 
 ## Architecture and Workflow
@@ -102,15 +102,17 @@ http://localhost:5173
 Insert Team Name
 
 Name | Role | Contact Email  
-Name 1 | Project Lead and Full Stack Developer | email1@example.com  
-Name 2 | UI UX and Frontend Developer | email2@example.com  
-Name 3 | Backend and AI Specialist | email3@example.com  
+Oladepo Caleb Olugbenga | Project Lead and Full Stack Developer | caleboladepo@gmail.com
+Olawale Ayanfe John | Business Analyst and AI/ML Engineer | ayanfejohn349@gmail.com 
 
 ## What’s Next for StudyEarn
 
 - Expanding language support to over 1,000 local African dialects using AI
 - Integrating blockchain for faster and borderless student payouts
 - Partnering with African universities for official course certification
+- Buidling a Mobile App with cross platform (iOS/Android) compatibility
+- Integrating a completely offline study mode for students
+- Enabling transferrable points amidst students.
 
 ## License
 
