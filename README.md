@@ -1,119 +1,117 @@
-StudyEarn 📚💰
-Empowering African Students to Learn and Earn
-🔗 Project Links
+# StudyEarn 📚💰
 
-Live Demo: https://studyearn.vercel.app
+## Empowering African Students to Learn and Earn
 
-Video Presentation: (Insert YouTube Link Here)
+## Project Links
 
-Presentation Slides: (Insert Slides Link Here)
+- Live Demo: https://studyearn.vercel.app
+- Video Presentation: https://youtu.be/PA1qGJnIXes
+- Presentation Slides: (https://drive.google.com/file/d/1CwmKoz2XXGCVBGCLMVgIlmzOfkQQRvjM/view)
 
-💡 Inspiration and Problem Statement
+## Inspiration and Problem Statement
 
 Education costs across Africa are rising rapidly. In Nigeria alone, private school fees have increased by up to 200 percent in the last five years.
-Sub Saharan Africa has over 98 million children out of school, while many students who remain enrolled struggle with financial pressure and debt.
+
+Sub Saharan Africa has over 98 million children out of school, while many students who remain enrolled struggle with financial pressure and over indebtedness.
 
 Students are often forced to choose between academic success and financial survival.
 
-StudyEarn was created to change this reality by turning learning into a source of income rather than a financial burden.
+StudyEarn was built to solve this problem by turning learning into an opportunity to earn, rather than a financial burden.
 
-🚀 Key Features
+## Key Features
 
-Skill to Earn
-Complete courses and quizzes to earn USD and reward points.
+- Skill to Earn  
+  Complete courses and quizzes to earn USD and reward points.
 
-Marketplace
-Upload study notes or past questions and earn 90 percent of every sale.
-Platform commission is 10 percent.
+- Marketplace  
+  Upload study notes or past questions and earn 90 percent of every sale.  
+  Platform commission is 10 percent.
 
-Community Support
-Peer to peer learning environment where knowledge sharing is rewarded.
+- Community Support  
+  Peer to peer learning hub where knowledge sharing is rewarded.
 
-AI Assistant
-Voice enabled study companion powered by OpenAI to assist with complex topics.
+- AI Assistant  
+  Voice enabled study companion powered by OpenAI for complex academic topics.
 
-Efficient Withdrawals
-Real time balance updates and fast payouts for student earnings.
+- Efficient Withdrawals  
+  Real time balance updates and fast payouts for student earnings.
 
-Leaderboards and Referrals
-Gamified competition and referral rewards to grow the community.
+- Leaderboards and Referrals  
+  Gamified competition and referral rewards to grow the community.
 
-🛠️ Technical Documentation
-Tech Stack
+## Technical Documentation
 
-Frontend: React, TypeScript, Vite
+### Tech Stack
 
-Styling: Tailwind CSS, shadcn/ui
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn UI
+- OpenAI API (GPT 4o and Whisper for voice)
+- Vercel for deployment
 
-AI Integration: OpenAI API (GPT 4o, Whisper for voice)
+## Architecture and Workflow
 
-Deployment: Vercel
+StudyEarn uses a modular, component driven architecture.
 
-🧠 Architecture and Workflow
+The AI Assistant interacts with the OpenAI API to provide real time academic support.  
+The Marketplace manages digital asset uploads, peer to peer transactions, and earnings distribution.  
+Real time balance synchronization ensures transparency for all users.
 
-StudyEarn follows a modular, component driven architecture.
+## Project Structure
 
-The AI Assistant communicates with the OpenAI API to deliver real time academic support.
-
-The Marketplace manages digital content uploads, purchases, and peer to peer transactions.
-
-Real time balance updates ensure transparency for student earnings.
-
-📁 Project Structure
 src/
- ├─ components/     Reusable UI elements (shadcn)
- ├─ pages/          Feature specific views (Marketplace, AI Lab, etc.)
- ├─ hooks/          Custom React logic
- ├─ utils/          API helpers and formatting
- ├─ App.tsx         Main routing
+ ├─ components/     Reusable UI elements
+ ├─ pages/          Feature specific views such as Marketplace and AI Lab
+ ├─ hooks/          Custom React hooks
+ ├─ utils/          API helpers and formatting utilities
+ ├─ App.tsx         Main routing component
  └─ main.tsx        Application entry point
 
-📦 Getting Started
-Prerequisites
+## Getting Started
 
-Node.js v18 or higher
+### Prerequisites
 
-npm or yarn
+- Node.js version 18 or higher
+- npm or yarn
 
-Installation and Setup
+### Installation
 
-Clone the repository
-
-git clone <your-repo-url>
-
-
-Install dependencies
-
+git clone <your-repo-url>  
 npm install
 
+### Environment Setup
 
-Create a .env file and add your OpenAI API key
+Create a .env file and add your OpenAI API key:
 
-OPENAI_API_KEY=your_key_here
+OPENAI_API_KEY=your_api_key_here
 
-
-Start the development server
+### Development
 
 npm run dev
 
-👥 Team Information
+The application will be available at:
 
-Team Name: (Insert Team Name)
+http://localhost:5173
 
-Name	Role	Contact Email
-Name 1	Project Lead and Full Stack Developer	email1@example.com
+## Team Information
 
-Name 2	UI UX and Frontend Developer	email2@example.com
+### Team Name
 
-Name 3	Backend and AI Specialist	email3@example.com
-📈 What’s Next for StudyEarn
+Insert Team Name
 
-Expand language support to over 1,000 local African dialects using AI.
+Name | Role | Contact Email  
+Name 1 | Project Lead and Full Stack Developer | email1@example.com  
+Name 2 | UI UX and Frontend Developer | email2@example.com  
+Name 3 | Backend and AI Specialist | email3@example.com  
 
-Integrate blockchain for faster and borderless student payouts.
+## What’s Next for StudyEarn
 
-Partner with African universities for official course certification.
+- Expanding language support to over 1,000 local African dialects using AI
+- Integrating blockchain for faster and borderless student payouts
+- Partnering with African universities for official course certification
 
-📄 License
+## License
 
-This project is licensed for academic, research, and demonstration purposes
+This project is licensed for academic, research, and demonstration purposes.
