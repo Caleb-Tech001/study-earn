@@ -7,6 +7,7 @@
 - Live Demo: https://studyearn.vercel.app
 - Video Presentation: https://youtu.be/PA1qGJnIXes
 - Presentation Slides: https://drive.google.com/file/d/1CwmKoz2XXGCVBGCLMVgIlmzOfkQQRvjM/view
+---
 
 ## Inspiration and Problem Statement
 
