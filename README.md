@@ -18,6 +18,7 @@ Sub Saharan Africa has over 98 million children out of school, while many studen
 Students are often forced to choose between academic success and financial survival.
 
 StudyEarn was built to solve this problem by turning learning into an opportunity to earn, rather than a financial burden.
+---
 
 ## What it Does
 
@@ -32,6 +33,7 @@ StudyEarn is a learning platform where users earn real money and points by compl
 - **Referral Program**: Earn bonuses by inviting friends
 - **Opportunities**: Sponsorships, Scholarships, Internships, and Hackathons
 - **And more**: Kindly explore additional features on the platform.
+---
 
 ## Key Features
 
@@ -41,6 +43,7 @@ StudyEarn is a learning platform where users earn real money and points by compl
 - AI Assistant  
 - Efficient Withdrawals  
 - Leaderboards and Referrals
+---
 
 ## How it was Built
 
@@ -51,6 +54,7 @@ StudyEarn is a learning platform where users earn real money and points by compl
 - **Payments**: Stripe integration for subscriptions.
 - **Conversion Rate**: Real-time live exchange rates (USD/NGN) and notifications.
 - **Hosting and Deployment**: Vercel.
+---
 
 ## Technical Documentation
 
@@ -65,6 +69,7 @@ StudyEarn is a learning platform where users earn real money and points by compl
 - Lovable Cloud (Supabase)
 - Stripe for payments
 - Vercel for deployment
+---
 
 ### Architecture & Workflow
 
@@ -76,6 +81,7 @@ StudyEarn uses a modular, component-driven architecture optimized for scalabilit
 - **Wallet System:** Tracks earnings, points, and withdrawals with real-time synchronization to ensure transparency.
 - **Backend:** Supabase (Lovable Cloud) handles authentication, database, and edge functions.
 - **Deployment:** Vercel for fast, globally accessible hosting.
+---
 
 ### AI Models and Tools Used
 
@@ -84,6 +90,7 @@ StudyEarn uses a modular, component-driven architecture optimized for scalabilit
 - **Supabase (Lovable Cloud):** Database, authentication, and real-time edge functions.  
 - **Stripe API:** Payment processing for subscriptions and withdrawals.  
 - **Google Translate API:** Multi-language support for local African dialects.
+---
 
 ## Project Structure
 
@@ -96,6 +103,7 @@ src/
  ├─ App.tsx         Main routing component
  └─ main.tsx        Application entry point
 ```
+---
 
 ## Getting Started
 
@@ -103,6 +111,7 @@ src/
 
 - Node.js version 18 or higher
 - npm or yarn
+---
 
 ### Installation
 
@@ -117,6 +126,7 @@ cd <project-folder>
 ```bash
 npm install
 ````
+---
 
 ### Environment Setup
 
@@ -127,6 +137,7 @@ OPENAI_API_KEY=your_api_key_here
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
 ```
+---
 
 ### Development
 
@@ -141,6 +152,7 @@ npm run dev
 ```bash
 http://localhost:5173
 ```
+---
 
 ## Challenges We Ran Into
 
@@ -150,6 +162,7 @@ http://localhost:5173
 - Integrating resend for the wallet support system was initially tricky
 - Ensuring real-time sync between earnings and displayed balances
 - Integrating voice AI assistant on a free tier account of elevenlabs (limited credits)
+---
 
 ## Accomplishments and Learnings
 
@@ -165,6 +178,7 @@ http://localhost:5173
 - Accurate live balance updates
 - Multiple withdrawal methods (gift cards, bank account, crypto)
 - Multi-language support via Google Translate API.
+---
 
 ## Team Information
 
@@ -174,6 +188,7 @@ http://localhost:5173
 |----------|----------|----------|
 | OLADEPO Caleb Olugbenga | Team Lead and Full-Stack Developer | caleboladepo@gmail.com |
 | OLAWALE Ayanfe John | Business Analyst and AI/ML Engineer | ayanfejohn349@gmail.com |
+---
 
 ## What’s Next for StudyEarn
 
@@ -185,6 +200,7 @@ http://localhost:5173
 - Integrating deeper learning insights and progress predictions.
 - Global Expansion: Multi-currency support and more localized content.
 - Enable transferrable points among students.
+---
 
 ## License
 
